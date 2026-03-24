@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hampshire Wars — Map</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link href="style.css" rel="stylesheet">
+</head>
+<body>
+
+<header>
+    <h1>Hampshire Wars</h1>
+</header>
+
+<div class="workspace" style="position:relative">
+    <canvas id="map"></canvas>
+
+    <div id="panel">
+        <div class="panel-header">Selected Tile</div>
+        <div id="tile-info">
+            <p class="no-selection">Click a tile to inspect it.</p>
+        </div>
+        
+        <div id="legend">
+            <div class="legend-title">Terrain</div>
+            <div class="legend-item"><div class="legend-swatch" style="background:#555a3e"></div>Plains</div>
+            <div class="legend-item"><div class="legend-swatch" style="background:#424242"></div>Wastes</div>
+            <div class="legend-item"><div class="legend-swatch" style="background:#352b16"></div>Dunes</div>
+        </div>
+    </div>
+
+    <div id="controls-hint">Drag to pan &nbsp;·&nbsp; Scroll to zoom &nbsp;·&nbsp; Click to select</div>
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>

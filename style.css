@@ -1,0 +1,198 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --bg:        #0d1117;
+    --panel-bg:  #12191f;
+    --border:    #2a3a4a;
+    --gold:      #c9a84c;
+    --gold-dim:  #7a6030;
+    --text:      #d4c9b0;
+    --text-dim:  #6e7a85;
+    --highlight: #e8d5a0;
+    --red:       #8b2020;
+
+    /* tile colours */
+    --tile-land:   #3a5a3a;
+    --tile-city:   #5a4a2a;
+    --tile-forest: #2a4a2a;
+    --tile-hills:  #6a5a3a;
+    --tile-coast:  #3a5a6a;
+    --tile-water:  #1a3a5a;
+    --tile-island: #4a3a6a;
+
+    --tile-land-s:   #4a7a4a;
+    --tile-city-s:   #8a7a4a;
+    --tile-forest-s: #3a6a3a;
+    --tile-hills-s:  #9a8a5a;
+    --tile-coast-s:  #4a8a9a;
+    --tile-water-s:  #2a5a8a;
+    --tile-island-s: #6a5a9a;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Crimson Text', serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel-bg);
+    flex-shrink: 0;
+}
+
+header h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.3rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+    text-transform: uppercase;
+}
+
+header span {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    font-style: italic;
+}
+
+.workspace {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+canvas {
+    flex: 1;
+    min-width: 0;
+    display: block;
+    cursor: grab;
+}
+canvas.dragging { cursor: grabbing; }
+
+/* ── SIDE PANEL ── */
+#panel {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--panel-bg);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.panel-header {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+}
+
+#tile-info {
+    flex: 1;
+    padding: 18px;
+    overflow-y: auto;
+}
+
+.no-selection {
+    color: var(--text-dim);
+    font-style: italic;
+    font-size: 0.95rem;
+    margin-top: 8px;
+}
+
+.tile-type-badge {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 2px;
+    margin-bottom: 14px;
+    border: 1px solid;
+}
+
+.badge-land    { color: #6aaa6a; border-color: #3a6a3a; background: #1a2e1a; }
+.badge-city    { color: var(--gold); border-color: var(--gold-dim); background: #2a2010; }
+.badge-forest  { color: #5a9a5a; border-color: #2a5a2a; background: #151e15; }
+.badge-hills   { color: #b0966a; border-color: #7a6a3a; background: #201a10; }
+.badge-coast   { color: #6aaabb; border-color: #3a6a7a; background: #101e22; }
+.badge-water   { color: #4a8ab0; border-color: #2a5a8a; background: #0a1520; }
+.badge-island  { color: #9a8acc; border-color: #5a4a8a; background: #151020; }
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 6px 0;
+    border-bottom: 1px solid #1e2e3a;
+    font-size: 0.9rem;
+}
+.info-row:last-child { border-bottom: none; }
+.info-label { color: var(--text-dim); font-size: 0.8rem; }
+.info-val   { color: var(--highlight); font-weight: 600; }
+
+.coord-display {
+    font-family: 'Cinzel', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 4px;
+}
+
+/* ── LEGEND ── */
+#legend {
+    padding: 14px 18px;
+    border-top: 1px solid var(--border);
+}
+.legend-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+}
+.legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+/* ── CONTROLS HINT ── */
+#controls-hint {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(13,17,23,0.85);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    pointer-events: none;
+    white-space: nowrap;
+    backdrop-filter: blur(4px);
+}
