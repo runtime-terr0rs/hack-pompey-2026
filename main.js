@@ -11,6 +11,12 @@ const TILE_TYPES = {
   dunes:  { label: 'Dunes',     gold: 1,  def: 2,  color: '#352b16', sel: '#51451f' },
 };
 
+const TURN_STATE = {
+  turn: 1,
+  players: ['Player 1', 'Player 2', 'Player 3', 'Player 4'],
+  currentPlayerIndex: 0,
+};
+
 // ═══════════════════════════════════════════════════════════════
 //  MAP GENERATION
 // ═══════════════════════════════════════════════════════════════
@@ -91,6 +97,21 @@ function pixelToHex(px, py, size, offsetX, offsetY) {
     }
   }
   return { col: bestCol, row: bestRow };
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TURN STATE
+// ═══════════════════════════════════════════════════════════════
+
+function advanceTurn() {
+  TURN_STATE.currentPlayerIndex = (TURN_STATE.currentPlayerIndex + 1) % TURN_STATE.players.length;
+  
+  if (TURN_STATE.currentPlayerIndex === 0) {
+    TURN_STATE.turn++;
+  }
+  
+  document.querySelector('#turn-number').textContent = TURN_STATE.turn;
+  document.querySelector('#player-name').textContent = TURN_STATE.players[TURN_STATE.currentPlayerIndex];
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -329,6 +350,10 @@ canvas.addEventListener('wheel', e => {
   cam.zoom = Math.max(0.35, Math.min(3, cam.zoom * factor));
   draw();
 }, { passive: false });
+
+document.querySelector('#end-turn-btn').addEventListener('click', () => {
+  advanceTurn();
+});
 
 // ═══════════════════════════════════════════════════════════════
 //  INIT

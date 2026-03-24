@@ -196,3 +196,36 @@ canvas.dragging { cursor: grabbing; }
     white-space: nowrap;
     backdrop-filter: blur(4px);
 }
+
+/* ── TURN SYSTEM ── */
+#turn-info {
+    padding: 18px;
+    border-bottom: 1px solid var(--border);
+}
+
+#end-turn-btn {
+    width: calc(100% - 36px);
+    margin: 12px 18px;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%);
+    border: none;
+    border-radius: 4px;
+    color: #000;
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#end-turn-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(201, 168, 76, 0.3);
+}
+
+#end-turn-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(201, 168, 76, 0.2);
+}

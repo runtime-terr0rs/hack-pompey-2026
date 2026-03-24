@@ -17,6 +17,19 @@
     <canvas id="map"></canvas>
 
     <div id="panel">
+        <div class="panel-header">Turn State</div>
+        <div id="turn-info">
+            <div class="info-row">
+                <span class="info-label">Turn</span>
+                <span id="turn-number" class="info-val">1</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Current Player</span>
+                <span id="player-name" class="info-val">Player 1</span>
+            </div>
+            <button id="end-turn-btn">End Turn</button>
+        </div>
+
         <div class="panel-header">Selected Tile</div>
         <div id="tile-info">
             <p class="no-selection">Click a tile to inspect it.</p>
