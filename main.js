@@ -1,25 +1,43 @@
-// ═══════════════════════════════════════════════════════════════
+//  CLASSES
+class Player {
+  constructor() {
+    this.gold = 200;
+  }
+
+  get getGold () {
+    return this.gold;
+  }
+
+  set setGold(gold) {
+    this.getGold = gold;
+  }
+}
+
 //  CONSTANTS
-// ═══════════════════════════════════════════════════════════════
-const COLS = 16;
+const COLS = 17;
 const ROWS = 12;
 const HEX_SIZE = 38; // flat-top: distance from centre to corner
 
 const TILE_TYPES = {
-  plains: { label: 'Plains',    gold: 1,  def: 0,  color: '#555a3e', sel: '#7f7f57' },
-  wastes: { label: 'Wastes',    gold: 1,  def: 1,  color: '#424242', sel: '#797979' },
-  dunes:  { label: 'Dunes',     gold: 1,  def: 2,  color: '#352b16', sel: '#51451f' },
+  city:   { label: 'City',      gold: 10, def: 5,  color: '#273041', sel: '#54778a' },
+  plains: { label: 'Plains',    gold: 1,  def: 0,  color: '#c4ad9e', sel: '#ede9e7' },
+  wastes: { label: 'Wastes',    gold: 0,  def: 2,  color: '#596c48', sel: '#86a966' },
+  dunes:  { label: 'Dunes',     gold: 0,  def: 3,  color: '#813D30', sel: '#b17467' },
+  mines:  { label: 'Mines',     gold: 5,  def: 0,  color: '#9A6546', sel: '#aa8b79' },
+  scav:   { label: 'Scav Site', gold: 20, def: 0,  color: '#362d27', sel: '#aa8b79' },
 };
 
-const TURN_STATE = {
+const GAME_STATE = {
   turn: 1,
-  players: ['Player 1', 'Player 2', 'Player 3', 'Player 4'],
   currentPlayerIndex: 0,
+  players: [
+    {id: 1, data: new Player()},
+    {id: 2, data: new Player()},
+    {id: 3, data: new Player()},
+    {id: 4, data: new Player()},
+  ]
 };
-
-// ═══════════════════════════════════════════════════════════════
 //  MAP GENERATION
-// ═══════════════════════════════════════════════════════════════
 
 function seededRand(seed) {
     let s = seed;
@@ -30,39 +48,48 @@ function seededRand(seed) {
 }
 
 function generateMap(seed = 42) {
-    const rand = seededRand(seed);
-    const tiles = [];
+  const rand = seededRand(seed);
+  const tiles = [];
+
+  const cityCols = [2, 2, 14, 14,];
+  const cityRows = [2, 9, 2, 9];
+  const citySet = new Set(cityCols.map((c, i) => `${c},${cityRows[i]}`));
 
     for (let r = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS; c++) {
-            let type;
-
-            // Weighted random terrain for mainland
-            const v = rand();
-            const isEdge = c === 0 || c === COLS-1 || r === 0 || r === ROWS-5;
-            if (isEdge && rand() > 0.4) {
-                type = 'plains';
-            } else if (v < 0.35) {
-                type = 'plains';
-            } else if (v < 0.55) {
-                type = 'wastes';
-            } else if (v < 0.70) {
-                type = 'wastes';
-            } else if (v < 0.82) {
-                type = 'dunes';
-            } else {
-                type = 'plains';
-            }
-            tiles.push({ col: c, row: r, type, owner: null, units: [], buildings: [] });
+      for (let c = 0; c < COLS; c++) {
+        let type;
+        const key = `${c},${r}`;
+        // Weighted random terrain for mainland
+        if (citySet.has(key)) {
+          type = 'city'; 
         }
+        else {
+          const v = rand();
+          const isEdge = c === 0 || c === COLS-1 || r === 0 || r === ROWS-1;
+          if (isEdge) {
+              type = 'plains';
+          } else if (v < 0.35) {
+              type = 'plains';
+          } else if (v < 0.60) {
+              type = 'wastes';
+          } else if (v < 0.80) {
+              type = 'dunes';
+          } else if (v < 0.90) {
+              type = 'mines';
+          } else if (v < 0.95) {
+              type = 'scav';
+          } else {
+              type = 'plains';
+          }
+        }
+          tiles.push({ col: c, row: r, type, owner: null, units: [], buildings: [] });
+
+      }
     }
     return tiles;
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  HEX GEOMETRY  (flat-top)
-// ═══════════════════════════════════════════════════════════════
-
+//  GEOMETRY
 function hexCenter(col, row, size) {
   const w = 2 * size;
   const h = Math.sqrt(3) * size;
@@ -99,25 +126,19 @@ function pixelToHex(px, py, size, offsetX, offsetY) {
   return { col: bestCol, row: bestRow };
 }
 
-// ═══════════════════════════════════════════════════════════════
 //  TURN STATE
-// ═══════════════════════════════════════════════════════════════
-
 function advanceTurn() {
-  TURN_STATE.currentPlayerIndex = (TURN_STATE.currentPlayerIndex + 1) % TURN_STATE.players.length;
+  GAME_STATE.currentPlayerIndex = (GAME_STATE.currentPlayerIndex + 1) % GAME_STATE.players.length;
   
-  if (TURN_STATE.currentPlayerIndex === 0) {
-    TURN_STATE.turn++;
+  if (GAME_STATE.currentPlayerIndex === 0) {
+    GAME_STATE.turn++;
   }
   
-  document.querySelector('#turn-number').textContent = TURN_STATE.turn;
-  document.querySelector('#player-name').textContent = TURN_STATE.players[TURN_STATE.currentPlayerIndex];
+  document.querySelector('#turn-number').textContent = GAME_STATE.turn;
+  document.querySelector('#player-name').textContent = "Player " + (GAME_STATE.currentPlayerIndex + 1);
 }
 
-// ═══════════════════════════════════════════════════════════════
 //  CAMERA STATE
-// ═══════════════════════════════════════════════════════════════
-
 const cam = {
   x: 0, y: 0,
   zoom: 1,
@@ -127,10 +148,7 @@ const cam = {
   hasDragged: false,
 };
 
-// ═══════════════════════════════════════════════════════════════
 //  RENDER
-// ═══════════════════════════════════════════════════════════════
-
 const canvas = document.getElementById('map');
 const ctx = canvas.getContext('2d');
 
@@ -197,39 +215,6 @@ function draw() {
 
     drawHex(ctx, x, y, size, fill, stroke, sw);
 
-    // City marker
-    if (tile.type === 'city') {
-      ctx.save();
-      ctx.fillStyle = isSelected ? '#ffd070' : '#c9a84c';
-      ctx.font = `bold ${Math.round(size * 0.45)}px Cinzel, serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('⬡', x, y);
-      ctx.restore();
-    }
-
-    // Island marker
-    if (tile.type === 'island') {
-      ctx.save();
-      ctx.fillStyle = isSelected ? '#d0c0ff' : '#9a8acc';
-      ctx.font = `${Math.round(size * 0.38)}px serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('⚓', x, y);
-      ctx.restore();
-    }
-
-    // Water ripple
-    if (tile.type === 'water') {
-      ctx.save();
-      ctx.fillStyle = 'rgba(100,160,220,0.2)';
-      ctx.font = `${Math.round(size * 0.32)}px serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('〰', x, y);
-      ctx.restore();
-    }
-
     // Selected glow ring
     if (isSelected) {
       const pts = hexCorners(x, y, size - 1);
@@ -250,9 +235,7 @@ function draw() {
   ctx.restore();
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  TILE INFO PANEL
-// ═══════════════════════════════════════════════════════════════
+//  INFO PANEL
 
 function updatePanel(tile) {
   const panel = document.getElementById('tile-info');
@@ -291,10 +274,7 @@ function updatePanel(tile) {
   `;
 }
 
-// ═══════════════════════════════════════════════════════════════
 //  INPUT
-// ═══════════════════════════════════════════════════════════════
-
 canvas.addEventListener('mousedown', e => {
   cam.dragging   = true;
   cam.hasDragged = false;
@@ -318,7 +298,6 @@ canvas.addEventListener('mousemove', e => {
 canvas.addEventListener('mouseup', e => {
   canvas.classList.remove('dragging');
   if (!cam.hasDragged) {
-    // It's a click — find which tile
     const rect = canvas.getBoundingClientRect();
     const px = e.clientX - rect.left;
     const py = e.clientY - rect.top;
@@ -344,7 +323,6 @@ canvas.addEventListener('wheel', e => {
   const rect = canvas.getBoundingClientRect();
   const mx = e.clientX - rect.left;
   const my = e.clientY - rect.top;
-  // Zoom towards mouse position
   cam.x = mx - (mx - cam.x) * factor;
   cam.y = my - (my - cam.y) * factor;
   cam.zoom = Math.max(0.35, Math.min(3, cam.zoom * factor));
@@ -355,9 +333,6 @@ document.querySelector('#end-turn-btn').addEventListener('click', () => {
   advanceTurn();
 });
 
-// ═══════════════════════════════════════════════════════════════
 //  INIT
-// ═══════════════════════════════════════════════════════════════
-
 window.addEventListener('resize', () => { resize(); });
 resize();
