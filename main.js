@@ -96,21 +96,36 @@ function seededRand(seed) {
     };
 }
 
-function generateMap(seed = 42) {
+function generateMap(seed = 42, numPlayers = 4) {
   const rand = seededRand(seed);
   const tiles = [];
-
-  const cityCols = [2, 2, 14, 14,];
+  const citySet = new Set();
+  const cityCols = [2, 14, 14, 2,];
   const cityRows = [2, 9, 2, 9];
-  const citySet = new Set(cityCols.map((c, i) => `${c},${cityRows[i]}`));
+
+  
+  for (let i = 0; i < numPlayers; i++) {
+    const citycol = cityCols[i] + Math.floor((Math.random() - 0.5) * 3);
+    const cityrow = cityRows[i] + Math.floor((Math.random() - 0.5) * 3);;
+    const key = `${citycol},${cityrow}`;
+    GAME_STATE.players[i].data.outpostCoords = {x: citycol, y: cityrow};
+    citySet.add(key);
+  }
+
 
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
         let type;
+        let playerId = null;
         const key = `${c},${r}`;
         // Weighted random terrain for mainland
         if (citySet.has(key)) {
-          type = 'outpost'; 
+          type = 'outpost';
+          GAME_STATE.players.forEach(player => {
+            if (player.data.outpostCoords.x === c && player.data.outpostCoords.y === r) {
+              playerId = player.id;
+            }
+          });
         }
         else {
           const v = rand();
@@ -131,7 +146,7 @@ function generateMap(seed = 42) {
               type = 'plains';
           }
         }
-          tiles.push({ col: c, row: r, type, owner: null, units: [], buildings: [] });
+          tiles.push({ col: c, row: r, type, owner: playerId, units: [], buildings: [] });
 
       }
     }
