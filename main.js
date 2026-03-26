@@ -2,6 +2,7 @@
 class Player {
   constructor() {
     this.gold = 200;
+    this.outpostCoords = {x: 0, y: 0}
   }
 
   get getGold () {
@@ -19,12 +20,12 @@ const ROWS = 12;
 const HEX_SIZE = 38; // flat-top: distance from centre to corner
 
 const TILE_TYPES = {
-  city:   { label: 'City',      gold: 10, def: 5,  color: '#273041', sel: '#54778a' },
-  plains: { label: 'Plains',    gold: 1,  def: 0,  color: '#c4ad9e', sel: '#ede9e7' },
-  wastes: { label: 'Wastes',    gold: 0,  def: 2,  color: '#596c48', sel: '#86a966' },
-  dunes:  { label: 'Dunes',     gold: 0,  def: 3,  color: '#813D30', sel: '#b17467' },
-  mines:  { label: 'Mines',     gold: 5,  def: 0,  color: '#9A6546', sel: '#aa8b79' },
-  scav:   { label: 'Scav Site', gold: 20, def: 0,  color: '#362d27', sel: '#aa8b79' },
+  outpost: { label: 'Outpost',   gold: 10, def: 5,  color: '#273041', sel: '#54778a' },
+  plains:  { label: 'Plains',    gold: 1,  def: 0,  color: '#c4ad9e', sel: '#ede9e7' },
+  wastes:  { label: 'Wastes',    gold: 0,  def: 2,  color: '#596c48', sel: '#86a966' },
+  dunes:   { label: 'Dunes',     gold: 0,  def: 3,  color: '#813D30', sel: '#b17467' },
+  mines:   { label: 'Mines',     gold: 5,  def: 0,  color: '#9A6546', sel: '#aa8b79' },
+  scav:    { label: 'Scav Site', gold: 20, def: 0,  color: '#362d27', sel: '#aa8b79' },
 };
 
 const GAME_STATE = {
@@ -61,7 +62,7 @@ function generateMap(seed = 42) {
         const key = `${c},${r}`;
         // Weighted random terrain for mainland
         if (citySet.has(key)) {
-          type = 'city'; 
+          type = 'outpost'; 
         }
         else {
           const v = rand();
