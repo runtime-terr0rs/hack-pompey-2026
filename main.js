@@ -21,6 +21,7 @@ class Units {
     this.health = UNIT_TYPES[type].health;
     this.defence = UNIT_TYPES[type].defence;
     this.pos = {x: 0, y: 0};
+    this.unitColour = UNIT_TYPES[type].unitColour;
   } 
 
   get getType() {
@@ -41,6 +42,10 @@ class Units {
 
   get getPos() {
     return this.pos;
+  }
+
+  get getUnitColour() {
+    return this.unitColour;
   }
 
   set setPos(pos) {
@@ -67,8 +72,8 @@ const TILE_TYPES = {
 };
 
 const UNIT_TYPES = {
-  worker: { label: 'Worker', cost: 50, strength: 1, health: 1, defence: 0 },
-  soldier: { label: 'Soldier', cost: 100, strength: 3, health: 3, defence: 2 },
+  worker: { label: 'Worker', cost: 50, strength: 1, health: 1, defence: 0, unitColour: '#f0c674' },
+  soldier: { label: 'Soldier', cost: 100, strength: 3, health: 3, defence: 2, unitColour: '#c94e50' },
 };
 
 const GAME_STATE = {
@@ -233,7 +238,7 @@ function drawUnits(ctx, units, x, y) {
   for (const unit of units) {
     const unitX = x + radius * Math.cos(angle);
     const unitY = y + radius * Math.sin(angle);
-    ctx.fillStyle = unit.type === 'worker' ? '#f0c674' : '#c94e50';
+    ctx.fillStyle = unit.getUnitColour;
     ctx.beginPath();
     ctx.arc(unitX, unitY, unitSize / 2, 0, 2 * Math.PI);
     ctx.fill();
