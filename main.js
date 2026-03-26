@@ -14,6 +14,44 @@ class Player {
   }
 }
 
+class Units {
+  constructor(type) {
+    this.type = type;
+    this.strength = UNIT_TYPES[type].strength;
+    this.health = UNIT_TYPES[type].health;
+    this.defence = UNIT_TYPES[type].defence;
+    this.pos = {x: 0, y: 0};
+  } 
+
+  get getType() {
+    return this.type;
+  }
+
+  get getStrength() {
+    return this.strength;
+  }
+
+  get getHealth() {
+    return this.health;
+  } 
+
+  get getDefence() {
+    return this.defence;
+  }
+
+  get getPos() {
+    return this.pos;
+  }
+
+  set setPos(pos) {
+    this.pos = pos;
+  }
+
+  set setHealth(health) {
+    this.health = health;
+  }
+}
+
 //  CONSTANTS
 const COLS = 17;
 const ROWS = 12;
@@ -26,6 +64,11 @@ const TILE_TYPES = {
   dunes:   { label: 'Dunes',     gold: 0,  def: 3,  color: '#813D30', sel: '#b17467' },
   mines:   { label: 'Mines',     gold: 5,  def: 0,  color: '#9A6546', sel: '#aa8b79' },
   scav:    { label: 'Scav Site', gold: 20, def: 0,  color: '#362d27', sel: '#aa8b79' },
+};
+
+const UNIT_TYPES = {
+  worker: { label: 'Worker', cost: 50, strength: 1, health: 1, defence: 0 },
+  soldier: { label: 'Soldier', cost: 100, strength: 3, health: 3, defence: 2 },
 };
 
 const GAME_STATE = {
@@ -182,6 +225,22 @@ function drawHex(ctx, cx, cy, size, fillColor, strokeColor, strokeWidth = 1) {
   ctx.stroke();
 }
 
+function drawUnits(ctx, units, x, y) {
+  const unitSize = 10;
+  const radius = 15;
+  const angleStep = (2 * Math.PI) / units.length;
+  let angle = 0;
+  for (const unit of units) {
+    const unitX = x + radius * Math.cos(angle);
+    const unitY = y + radius * Math.sin(angle);
+    ctx.fillStyle = unit.type === 'worker' ? '#f0c674' : '#c94e50';
+    ctx.beginPath();
+    ctx.arc(unitX, unitY, unitSize / 2, 0, 2 * Math.PI);
+    ctx.fill();
+    angle += angleStep;
+  }
+}
+
 function draw() {
   const W = canvas.width, H = canvas.height;
   ctx.clearRect(0, 0, W, H);
@@ -215,6 +274,11 @@ function draw() {
     const sw     = isSelected ? 2.5 : 1;
 
     drawHex(ctx, x, y, size, fill, stroke, sw);
+
+    // Draw units on tile
+    if (tile.units.length > 0) {
+      drawUnits(ctx, tile.units, x, y);
+    }
 
     // Selected glow ring
     if (isSelected) {
@@ -273,6 +337,25 @@ function updatePanel(tile) {
       <span class="info-val">${tile.buildings.length || '—'}</span>
     </div>
   `;
+
+  if (tile.type.toLowerCase() === TILE_TYPES.outpost.label.toLowerCase()) {
+    panel.innerHTML += `
+      <div class="panel-header">Outpost Operations</div>
+      <div class="info-row">
+        <span class="info-label">train troops</span>
+        <span class="info-val">
+        <button class="info-btn" id="train-troops-btn" onclick="addTroops()">Train</button>
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">create workers</span>
+        <span class="info-val">
+        <button class="info-btn" id="create-workers-btn" onclick="createWorkers()">Create</button>
+        </span>
+      </div>
+    `;
+    
+  }
 }
 
 //  INPUT
@@ -330,6 +413,23 @@ canvas.addEventListener('wheel', e => {
   draw();
 }, { passive: false });
 
+function addTroops() {
+  let unit = new Units('soldier');
+  unit.setPos = {x: selectedTile.col, y: selectedTile.row};
+  selectedTile.units.push(unit);
+  updatePanel(selectedTile);
+  draw();
+}
+
+function createWorkers() {
+  let unit = new Units('worker');
+  unit.setPos = {x: selectedTile.col, y: selectedTile.row};
+  selectedTile.units.push(unit);
+  updatePanel(selectedTile);
+  draw();
+};
+
+// Event listeners
 document.querySelector('#end-turn-btn').addEventListener('click', () => {
   advanceTurn();
 });
