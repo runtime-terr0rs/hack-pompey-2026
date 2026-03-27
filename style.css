@@ -95,7 +95,7 @@ canvas.dragging { cursor: grabbing; }
     padding: 16px 18px 12px;
     border-bottom: 1px solid var(--border);
     font-family: 'Cinzel', serif;
-    font-size: 0.7rem;
+    font-size: 1.3rem;
     letter-spacing: 0.15em;
     color: var(--gold-dim);
     text-transform: uppercase;
@@ -140,10 +140,10 @@ canvas.dragging { cursor: grabbing; }
     align-items: baseline;
     padding: 6px 0;
     border-bottom: 1px solid #1e2e3a;
-    font-size: 0.9rem;
+    font-size: 1.5rem;
 }
 .info-row:last-child { border-bottom: none; }
-.info-label { color: var(--text-dim); font-size: 0.8rem; }
+.info-label { color: var(--text-dim); font-size: 1.4rem; }
 .info-val   { color: var(--highlight); font-weight: 600; }
 
 .info-btn {
