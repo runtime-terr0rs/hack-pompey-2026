@@ -2,7 +2,6 @@
 class Player {
   constructor() {
     this.gold = 200;
-    this.playerName;
     this.outpostCoords = {x: 0, y: 0}
   }
 
@@ -117,14 +116,14 @@ function generateMap(seed = 42, numPlayers = 4) {
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
         let type;
-        let playerId = null;
+        let playerName = null;
         const key = `${c},${r}`;
         // Weighted random terrain for mainland
         if (citySet.has(key)) {
           type = 'outpost';
           GAME_STATE.players.forEach(player => {
             if (player.data.outpostCoords.x === c && player.data.outpostCoords.y === r) {
-              playerId = player.id;
+              playerName = player.playerName;
             }
           });
         }
@@ -147,7 +146,7 @@ function generateMap(seed = 42, numPlayers = 4) {
               type = 'plains';
           }
         }
-          tiles.push({ col: c, row: r, type, owner: playerId, units: [], buildings: [] });
+          tiles.push({ col: c, row: r, type, owner: playerName, units: [], buildings: [] });
 
       }
     }
