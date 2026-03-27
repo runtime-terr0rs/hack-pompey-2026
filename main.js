@@ -2,6 +2,7 @@
 class Player {
   constructor() {
     this.gold = 200;
+    this.playerName;
     this.outpostCoords = {x: 0, y: 0}
   }
 
@@ -80,10 +81,10 @@ const GAME_STATE = {
   turn: 1,
   currentPlayerIndex: 0,
   players: [
-    {id: 1, data: new Player()},
-    {id: 2, data: new Player()},
-    {id: 3, data: new Player()},
-    {id: 4, data: new Player()},
+    {id: 1, playerName: 'Player 1', data: new Player()},
+    {id: 2, playerName: 'Player 2', data: new Player()},
+    {id: 3, playerName: 'Player 3', data: new Player()},
+    {id: 4, playerName: 'Player 4', data: new Player()},
   ]
 };
 //  MAP GENERATION
@@ -199,7 +200,7 @@ function advanceTurn() {
   }
   
   document.querySelector('#turn-number').textContent = GAME_STATE.turn;
-  document.querySelector('#player-name').textContent = "Player " + (GAME_STATE.currentPlayerIndex + 1);
+  document.querySelector('#player-name').textContent = GAME_STATE.players[GAME_STATE.currentPlayerIndex].playerName;
 }
 
 //  CAMERA STATE
@@ -457,3 +458,5 @@ document.querySelector('#end-turn-btn').addEventListener('click', () => {
 //  INIT
 window.addEventListener('resize', () => { resize(); });
 resize();
+
+document.querySelector('#player-name').textContent = GAME_STATE.players[0].playerName;
