@@ -480,10 +480,6 @@ function updatePanel(tile) {
       <span class="info-label">Units</span>
       <span class="info-val">${tile.units.length || '—'}</span>
     </div>
-    <div class="info-row">
-      <span class="info-label">Buildings</span>
-      <span class="info-val">${tile.buildings.length || '—'}</span>
-    </div>
   `;
 
   // Unit action buttons
@@ -593,7 +589,6 @@ function executeMove(toCol, toRow) {
   const toTile   = tiles.find(t => t.col === toCol && t.row === toRow);
 
   if (!fromTile || !toTile || !isAdjacentTile(fromTile.col, fromTile.row, toCol, toRow)) {
-    // Enforce adjacent-only movement (single step)
     cancelMove();
     return;
   }
@@ -606,11 +601,23 @@ function executeMove(toCol, toRow) {
   selectedUnit.setMovement = selectedUnit.getMovement - 1;
   selectedUnit.setPos = { x: toCol, y: toRow };
   fromTile.units = fromTile.units.filter(u => u !== selectedUnit);
+
+  // Clear ownership of fromTile if no units belonging to its owner remain,
+  // and it isn't an outpost (outposts keep their owner until invaded).
+  if (fromTile.type !== 'outpost') {
+    const ownerStillPresent = fromTile.units.some(u => u.getOwner === fromTile.owner);
+    if (!ownerStillPresent) fromTile.owner = null;
+  }
+
   toTile.units.push(selectedUnit);
+
+  // Claim the destination tile for the moving unit's owner.
+  if (toTile.type !== 'outpost') {
+    toTile.owner = selectedUnit.getOwner;
+  }
 
   handleOutpostInvasion(toTile, selectedUnit);
 
-  // After each move, require explicit move command to continue
   selectedUnit = null;
   reachableTiles = new Set();
   selectedTile = toTile;
