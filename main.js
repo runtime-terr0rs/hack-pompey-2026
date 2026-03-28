@@ -367,14 +367,22 @@ function drawUnits(ctx, tile, x, y) {
 
     ctx.globalAlpha = unit.getMovement === 0 ? 0.4 : 1.0;
     ctx.fillStyle = unit.getUnitColour;
-    ctx.beginPath();
-    ctx.arc(unitX, unitY, unitSize / 2, 0, 2 * Math.PI);
-
+    
+    // Draw ASCII character instead of circle
+    ctx.font = 'bold 20px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const char = unit.getType === 'soldier' ? '⚔' : '🛠';
     const ownerPlayer = GAME_STATE.players.find(p => p.playerName === unit.getOwner);
-    ctx.strokeStyle = ownerPlayer ? ownerPlayer.data.getUnitColour : '#ffffff';
-    ctx.lineWidth = 2.5;
-    ctx.fill();
-    ctx.stroke();
+    ctx.fillStyle = ownerPlayer ? ownerPlayer.data.getUnitColour : '#ffffff';
+    
+    // Draw black outline
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 3;
+    ctx.strokeText(char, unitX, unitY);
+    
+    ctx.fillText(char, unitX, unitY);
+
 
     // White ring around the currently selected unit
     if (unit === selectedUnit) {
@@ -502,6 +510,14 @@ function updatePanel(tile) {
     <div class="info-row">
       <span class="info-label">Units</span>
       <span class="info-val">${tile.units.length || '—'}</span>
+      <span> ${['worker', 'soldier'].map(type => {
+        const count = tile.units.filter(u => u.getType === type).length;
+        return count > 0 ? `<span class="unit-badge badge-${type}">${type} (${count}/1)</span> \n` : '';
+      }).join('')}</span>
+     
+    </div>
+    <div class="info-row">
+      
     </div>
   `;
 
