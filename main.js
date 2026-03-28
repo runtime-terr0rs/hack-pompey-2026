@@ -680,6 +680,7 @@ function executeMove(toCol, toRow) {
   handleOutpostInvasion(toTile, selectedUnit);
 
   selectedUnit = null;
+  selectedAction = null;
   reachableTiles = new Set();
   selectedTile = toTile;
 
@@ -708,9 +709,32 @@ function executeAttack(toCol, toRow) {
   }
 
   const enemyIndex = targetTile.units.findIndex(u => u.getOwner && u.getOwner !== selectedUnit.getOwner);
-  if (enemyIndex !== -1) {
-    targetTile.units.splice(enemyIndex, 1);
+  if (enemyIndex === -1) {
+    cancelMove();
+    return;
   }
+
+  const enemyUnit = targetTile.units[enemyIndex];
+  let attackSucceeded = true;
+
+  if (enemyUnit.getType === 'soldier') {
+    const roll = Math.floor(Math.random() * 6) + 1;
+    attackSucceeded = roll > enemyUnit.getDefence;
+  }
+
+  selectedUnit.setMovement = Math.max(0, selectedUnit.getMovement - 2);
+
+  if (!attackSucceeded) {
+    selectedUnit = null;
+    selectedAction = null;
+    reachableTiles = new Set();
+    selectedTile = fromTile;
+    updatePanel(selectedTile);
+    draw();
+    return;
+  }
+
+  targetTile.units.splice(enemyIndex, 1);
 
   // Remove the unit from the origin tile before moving it.
   fromTile.units = fromTile.units.filter(u => u !== selectedUnit);
@@ -731,7 +755,6 @@ function executeAttack(toCol, toRow) {
     handleOutpostInvasion(targetTile, selectedUnit);
   }
 
-  selectedUnit.setMovement = Math.max(0, selectedUnit.getMovement - 2);
   selectedUnit = null;
   selectedAction = null;
   reachableTiles = new Set();
