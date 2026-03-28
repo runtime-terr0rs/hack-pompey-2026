@@ -480,10 +480,6 @@ function updatePanel(tile) {
       <span class="info-label">Units</span>
       <span class="info-val">${tile.units.length || '—'}</span>
     </div>
-    <div class="info-row">
-      <span class="info-label">Buildings</span>
-      <span class="info-val">${tile.buildings.length || '—'}</span>
-    </div>
   `;
 
   // Unit action buttons

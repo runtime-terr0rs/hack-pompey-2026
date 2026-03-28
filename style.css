@@ -45,7 +45,7 @@ header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 24px;
+    padding: 20px 20px;
     border-bottom: 1px solid var(--border);
     background: var(--panel-bg);
     flex-shrink: 0;
@@ -82,7 +82,7 @@ canvas.dragging { cursor: grabbing; }
 
 /* ── SIDE PANEL ── */
 #panel {
-    width: 260px;
+    width: 400px;
     flex-shrink: 0;
     background: var(--panel-bg);
     border-left: 1px solid var(--border);
