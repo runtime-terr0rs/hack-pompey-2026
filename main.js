@@ -1,7 +1,7 @@
 //  CLASSES
 class Player {
   constructor() {
-    this.gold = 200;
+    this.gold = 15;
     this.outpostCoords = {x: 0, y: 0};
     this.colour;
     this.defeated = false;
@@ -270,15 +270,26 @@ function getNextActivePlayerIndex(startIndex) {
 function advanceTurn() {
   selectedUnit = null;
   reachableTiles = new Set();
+  const player = GAME_STATE.players[GAME_STATE.currentPlayerIndex];
+  const passiveGold = 3;
+  player.data.gold += passiveGold;
+  
+  for (const tile of tiles) {
+    for (const unit of tile.units) {
+      unit.setMovement = unit.getMaxMovement;
+
+      if (unit.getOwner === GAME_STATE.players[GAME_STATE.currentPlayerIndex].playerName) {
+        const tileGold = TILE_TYPES[tile.type].gold || 0;
+        if (unit.getType === 'worker' && tileGold > 0) {
+          player.data.gold += tileGold;
+        }
+      }
+    }
+  }
 
   GAME_STATE.currentPlayerIndex = getNextActivePlayerIndex(GAME_STATE.currentPlayerIndex);
   if (GAME_STATE.currentPlayerIndex === 0) GAME_STATE.turn++;
 
-  for (const tile of tiles) {
-    for (const unit of tile.units) {
-      unit.setMovement = unit.getMaxMovement;
-    }
-  }
 
   document.querySelector('#turn-number').textContent = GAME_STATE.turn;
   document.querySelector('#player-name').textContent = GAME_STATE.players[GAME_STATE.currentPlayerIndex].playerName;
@@ -400,7 +411,7 @@ function draw() {
   ctx.save();
   ctx.translate(cam.x, cam.y);
   ctx.scale(cam.zoom, cam.zoom);
-
+  
   const size = HEX_SIZE;
 
   for (const tile of tiles) {
