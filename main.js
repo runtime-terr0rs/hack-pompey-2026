@@ -555,6 +555,10 @@ function updatePanel(tile) {
 }
 
 //  MOVEMENT ACTIONS
+function isTileOccupiedBySameType(tile, unitType) {
+  return tile.units.some(u => u.getType === unitType);
+}
+
 function startMove(unitType) {
   if (!selectedTile) return;
   const unit = selectedTile.units.find(u => u.getType === unitType && u.getMovement > 0);
@@ -564,6 +568,11 @@ function startMove(unitType) {
 
   // Only immediately adjacent tiles are valid move targets.
   reachableTiles = getReachableTiles(selectedTile.col, selectedTile.row, 1);
+  reachableTiles = new Set([...reachableTiles].filter(key => {
+    const [col, row] = key.split(',').map(Number);
+    const tile = tiles.find(t => t.col === col && t.row === row);
+    return tile && !isTileOccupiedBySameType(tile, unitType);
+  }));
   updatePanel(selectedTile);
   draw();
 }
@@ -581,6 +590,11 @@ function executeMove(toCol, toRow) {
 
   if (!fromTile || !toTile || !isAdjacentTile(fromTile.col, fromTile.row, toCol, toRow)) {
     // Enforce adjacent-only movement (single step)
+    cancelMove();
+    return;
+  }
+
+  if (isTileOccupiedBySameType(toTile, selectedUnit.getType)) {
     cancelMove();
     return;
   }
