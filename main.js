@@ -847,13 +847,17 @@ canvas.addEventListener('mouseup', e => {
     const { col, row } = pixelToHex(px, py, HEX_SIZE, cam.zoom, cam.x, cam.y);
     const tile = tiles.find(t => t.col === col && t.row === row);
     if (tile) {
+      
+       if (selectedAction !== 'attack') {
+        document.getElementById('combat-div').style.display = 'none';
+      }
+
       const key = `${col},${row}`;
       if (selectedUnit && reachableTiles.has(key)) {
         if (selectedAction === 'attack') {
           executeAttack(col, row);
         } else {
           executeMove(col, row);
-          document.getElementById('combat-div').style.display = 'none';
         }
       } else {
         cancelMove();
