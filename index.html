@@ -17,7 +17,11 @@
     <canvas id="map"></canvas>
 
     <div id="panel">
-        <div class="panel-header">Turn State</div>
+    <div id="turn-panel">
+        <div class="panel-header collapsible-header" id="stats-toggle">
+            Turn State
+            <span class="collapse-arrow" id="stats-arrow">▲</span>
+        </div>
         <div id="turn-info">
             <div class="info-row">
                 <span class="info-label">Turn</span>
@@ -27,21 +31,19 @@
                 <span class="info-label">Current Player</span>
                 <span id="player-name" class="info-val"></span>
             </div>
-            <button id="end-turn-btn">End Turn</button>
         </div>
+        <button id="end-turn-btn">End Turn</button>
 
-        <div class="panel-header">Selected Tile</div>
-        <div id="tile-info">
-            <p class="no-selection">Click a tile to inspect it.</p>
-        </div>
-        
-        <div id="legend">
-            <div class="legend-title">Terrain</div>
-            <div class="legend-item"><div class="legend-swatch" style="background:#555a3e"></div>Plains</div>
-            <div class="legend-item"><div class="legend-swatch" style="background:#424242"></div>Wastes</div>
-            <div class="legend-item"><div class="legend-swatch" style="background:#352b16"></div>Dunes</div>
+        <div id="stats-body">
+            <!-- populated by JS -->
         </div>
     </div>
+
+    <div class="panel-header">Selected Tile</div>
+    <div id="tile-info">
+        <p class="no-selection">Click a tile to inspect it.</p>
+    </div>
+</div>
 
     <div id="controls-hint">Drag to pan &nbsp;·&nbsp; Scroll to zoom &nbsp;·&nbsp; Click to select</div>
 </div>

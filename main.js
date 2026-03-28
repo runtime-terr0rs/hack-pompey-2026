@@ -59,12 +59,12 @@ const ROWS = 12;
 const HEX_SIZE = 38; // flat-top: distance from centre to corner
 
 const TILE_TYPES = {
-  outpost: { label: 'Alien Caverns',               gold: 10, def: 5,  color: '#273041', sel: '#54778a' },
-  plains:  { label: 'AI Data Center Flood Plains',  gold: 1,  def: 0,  color: '#c4ad9e', sel: '#ede9e7' },
-  wastes:  { label: 'Vape Zeppelin Factories',      gold: 0,  def: 2,  color: '#596c48', sel: '#86a966' },
-  dunes:   { label: 'Flying Car Dealerships',       gold: 0,  def: 3,  color: '#813D30', sel: '#b17467' },
-  mines:   { label: 'Caffeine Glaciers',            gold: 5,  def: 0,  color: '#9A6546', sel: '#aa8b79' },
-  scav:    { label: 'OpenArmy Barracks',            gold: 20, def: 0,  color: '#362d27', sel: '#aa8b79' },
+  outpost: { label: 'OpenArmy Barracks',   gold: 10, def: 5,  color: '#273041', sel: '#54778a' },
+  plains:  { label: 'AI Data Center Flood Plains',    gold: 1,  def: 0,  color: '#c4ad9e', sel: '#ede9e7' },
+  wastes:  { label: 'Vape Zeppelin Factories',    gold: 0,  def: 2,  color: '#596c48', sel: '#86a966' },
+  dunes:   { label: "Flying Car Dealerships",     gold: 0,  def: 3,  color: '#813D30', sel: '#b17467' },
+  mines:   { label: 'Caffeine Glaciers',     gold: 5,  def: 0,  color: '#9A6546', sel: '#aa8b79' },
+  scav:    { label: 'Alien Caverns', gold: 20, def: 0,  color: '#362d27', sel: '#aa8b79' },
 };
 
 const UNIT_TYPES = {
@@ -284,6 +284,7 @@ function advanceTurn() {
   document.querySelector('#player-name').textContent = GAME_STATE.players[GAME_STATE.currentPlayerIndex].playerName;
   updatePanel(selectedTile);
   draw();
+  updateStatsPanel();
 }
 
 //  CAMERA STATE
@@ -518,7 +519,7 @@ function updatePanel(tile) {
   }
 
   // Outpost operations
-  if (tile.type === 'outpost') {
+  if (tile.type === 'outpost' && tile.owner === GAME_STATE.players[GAME_STATE.currentPlayerIndex].playerName) {
     panel.innerHTML += `
       <div class="panel-header">Outpost Operations</div>
       <div class="info-row">
@@ -666,6 +667,7 @@ function addTroops() {
   selectedTile.units.push(unit);
   handleOutpostInvasion(selectedTile, unit);
   updatePanel(selectedTile);
+  updateStatsPanel();
   draw();
 }
 
@@ -675,7 +677,26 @@ function createWorkers() {
   unit.setOwner = selectedTile.owner;
   selectedTile.units.push(unit);
   updatePanel(selectedTile);
+  updateStatsPanel();
   draw();
+}
+
+function updateStatsPanel() {
+    const body = document.getElementById('stats-body');
+    body.innerHTML = GAME_STATE.players.map(p => {
+        const soldierCount = tiles.filter(t => t.units.some(u => u.getOwner === p.playerName)).reduce((sum, t) => sum + t.units.filter(u => u.getOwner === p.playerName && u.getType === 'soldier').length, 0);
+        const workerCount = tiles.filter(t => t.units.some(u => u.getOwner === p.playerName)).reduce((sum, t) => sum + t.units.filter(u => u.getOwner === p.playerName && u.getType === 'worker').length, 0);
+        return `
+        <div class="player-stat-row">
+            <div class="player-colour-dot" style="background:${p.data.getUnitColour}"></div>
+            <span class="player-stat-name">${p.playerName}</span>
+            ${p.data.defeated
+                ? '<span class="player-stat-defeated">Defeated</span>'
+                : `<span class="player-stat-gold">${p.data.gold}g</span>
+                   <span class="player-stat-units">⚔ ${soldierCount}</span>`}
+                   <span class="player-stat-units">🛠 ${workerCount}</span>
+        </div>
+    `}).join('');
 }
 
 // Event listeners
@@ -683,8 +704,15 @@ document.querySelector('#end-turn-btn').addEventListener('click', () => {
   advanceTurn();
 });
 
+document.getElementById('stats-toggle').addEventListener('click', () => {
+    const body = document.getElementById('stats-body');
+    const arrow = document.getElementById('stats-arrow');
+    body.classList.toggle('collapsed');
+    arrow.classList.toggle('collapsed');
+});
+
 //  INIT
 window.addEventListener('resize', () => { resize(); });
 resize();
-
+updateStatsPanel();
 document.querySelector('#player-name').textContent = GAME_STATE.players[0].playerName;
