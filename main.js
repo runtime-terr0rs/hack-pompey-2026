@@ -230,6 +230,7 @@ function advanceTurn() {
   
   document.querySelector('#turn-number').textContent = GAME_STATE.turn;
   document.querySelector('#player-name').textContent = GAME_STATE.players[GAME_STATE.currentPlayerIndex].playerName;
+  updateStatsPanel();
 }
 
 //  CAMERA STATE
@@ -494,6 +495,7 @@ function addTroops() {
   selectedTile.units.push(unit);
   handleOutpostInvasion(selectedTile, unit);
   updatePanel(selectedTile);
+  updateStatsPanel();
   draw();
 }
 
@@ -503,16 +505,42 @@ function createWorkers() {
   unit.setOwner = selectedTile.owner;
   selectedTile.units.push(unit);
   updatePanel(selectedTile);
+  updateStatsPanel();
   draw();
 };
+
+function updateStatsPanel() {
+    const body = document.getElementById('stats-body');
+    body.innerHTML = GAME_STATE.players.map(p => {
+        const soldierCount = tiles.filter(t => t.units.some(u => u.getOwner === p.playerName)).reduce((sum, t) => sum + t.units.filter(u => u.getOwner === p.playerName && u.getType === 'soldier').length, 0);
+        const workerCount = tiles.filter(t => t.units.some(u => u.getOwner === p.playerName)).reduce((sum, t) => sum + t.units.filter(u => u.getOwner === p.playerName && u.getType === 'worker').length, 0);
+        return `
+        <div class="player-stat-row">
+            <div class="player-colour-dot" style="background:${p.data.getUnitColour}"></div>
+            <span class="player-stat-name">${p.playerName}</span>
+            ${p.data.defeated
+                ? '<span class="player-stat-defeated">Defeated</span>'
+                : `<span class="player-stat-gold">${p.data.gold}g</span>
+                   <span class="player-stat-units">⚔ ${soldierCount}</span>`}
+                   <span class="player-stat-units">🛠 ${workerCount}</span>
+        </div>
+    `}).join('');
+}
 
 // Event listeners
 document.querySelector('#end-turn-btn').addEventListener('click', () => {
   advanceTurn();
 });
 
+document.getElementById('stats-toggle').addEventListener('click', () => {
+    const body = document.getElementById('stats-body');
+    const arrow = document.getElementById('stats-arrow');
+    body.classList.toggle('collapsed');
+    arrow.classList.toggle('collapsed');
+});
+
 //  INIT
 window.addEventListener('resize', () => { resize(); });
 resize();
-
+updateStatsPanel();
 document.querySelector('#player-name').textContent = GAME_STATE.players[0].playerName;
