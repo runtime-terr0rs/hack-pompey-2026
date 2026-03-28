@@ -533,7 +533,7 @@ function updatePanel(tile) {
         const neighbourTile = tiles.find(t => t.col === n.col && t.row === n.row);
         return neighbourTile && neighbourTile.units.some(u => u.getOwner && u.getOwner !== soldier.getOwner);
       });
-      const canAttack = canMove && enemyAdjacent;
+      const canAttack = soldier.getMovement >= 2 && enemyAdjacent;
       panel.innerHTML += `
         <div class="info-row">
           <span class="info-label">Soldier (${soldier.getMovement}/${soldier.getMaxMovement} actions)</span>
@@ -543,7 +543,7 @@ function updatePanel(tile) {
               : `<button class="info-btn" ${canMove ? `onclick="startMove('soldier')"` : 'disabled'}>${isMoving ? 'Moving…' : 'Move'}</button>`}
           </span>
         </div>`;
-      if (!(selectedUnit === soldier && selectedAction === 'attack')) {
+      if (selectedAction !== 'move' && !(selectedUnit === soldier && selectedAction === 'attack')) {
         panel.innerHTML += `
           <div class="info-row">
             <span class="info-label">&nbsp;</span>
@@ -621,12 +621,11 @@ function startMove(unitType) {
 
 function startAttack() {
   if (!selectedTile) return;
-  const unit = selectedTile.units.find(u => u.getType === 'soldier' && u.getMovement > 0);
+  const unit = selectedTile.units.find(u => u.getType === 'soldier' && u.getMovement >= 2);
   if (!unit) return;
   selectedUnit = unit;
   selectedAction = 'attack';
   selectedUnit.setPos = { x: selectedTile.col, y: selectedTile.row };
-  selectedUnit.setMovement = selectedUnit.getMovement - 1;
 
   reachableTiles = getAdjacentReachableTiles(selectedTile.col, selectedTile.row);
   reachableTiles = new Set([...reachableTiles].filter(key => {
@@ -701,8 +700,9 @@ function executeAttack(toCol, toRow) {
     return;
   }
 
+  const fromTile = tiles.find(t => t.col === selectedUnit.getPos.x && t.row === selectedUnit.getPos.y);
   const targetTile = tiles.find(t => t.col === toCol && t.row === toRow);
-  if (!targetTile || !targetTile.units.some(u => u.getOwner && u.getOwner !== selectedUnit.getOwner)) {
+  if (!fromTile || !targetTile || !targetTile.units.some(u => u.getOwner && u.getOwner !== selectedUnit.getOwner)) {
     cancelMove();
     return;
   }
@@ -710,12 +710,28 @@ function executeAttack(toCol, toRow) {
   const enemyIndex = targetTile.units.findIndex(u => u.getOwner && u.getOwner !== selectedUnit.getOwner);
   if (enemyIndex !== -1) {
     targetTile.units.splice(enemyIndex, 1);
-    if (targetTile.type !== 'outpost' && targetTile.units.length === 0) {
-      targetTile.owner = null;
-    }
   }
 
-  selectedUnit.setMovement = Math.max(0, selectedUnit.getMovement - 1);
+  // Remove the unit from the origin tile before moving it.
+  fromTile.units = fromTile.units.filter(u => u !== selectedUnit);
+
+  // Clear ownership of the origin tile if no friendly units remain.
+  if (fromTile.type !== 'outpost') {
+    const ownerStillPresent = fromTile.units.some(u => u.getOwner === fromTile.owner);
+    if (!ownerStillPresent) fromTile.owner = null;
+  }
+
+  selectedUnit.setPos = { x: toCol, y: toRow };
+  targetTile.units.push(selectedUnit);
+  if (targetTile.type !== 'outpost') {
+    targetTile.owner = selectedUnit.getOwner;
+  }
+
+  if (targetTile.type === 'outpost') {
+    handleOutpostInvasion(targetTile, selectedUnit);
+  }
+
+  selectedUnit.setMovement = Math.max(0, selectedUnit.getMovement - 2);
   selectedUnit = null;
   selectedAction = null;
   reachableTiles = new Set();
