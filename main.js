@@ -534,20 +534,24 @@ function updatePanel(tile) {
 
   // Outpost operations
   if (tile.type === 'outpost' && tile.owner === GAME_STATE.players[GAME_STATE.currentPlayerIndex].playerName) {
+    const player = GAME_STATE.players[GAME_STATE.currentPlayerIndex];
     const soldierExists = tile.units.some(u => u.getType === 'soldier');
     const workerExists  = tile.units.some(u => u.getType === 'worker');
+    const canAffordSoldier = player.data.gold >= 10;
+    const canAffordWorker  = player.data.gold >= 5;
+
     panel.innerHTML += `
       <div class="panel-header">Outpost Operations</div>
       <div class="info-row">
         <span class="info-label">train troops</span>
         <span class="info-val">
-          <button class="info-btn" id="train-troops-btn" ${soldierExists ? 'disabled' : 'onclick="addTroops()"'}>Train</button>
+          <button class="info-btn" id="train-troops-btn" ${soldierExists || !canAffordSoldier ? 'disabled' : 'onclick="addTroops()"'}>Train</button>
         </span>
       </div>
       <div class="info-row">
         <span class="info-label">create workers</span>
         <span class="info-val">
-          <button class="info-btn" id="create-workers-btn" ${workerExists ? 'disabled' : 'onclick="createWorkers()"'}>Create</button>
+          <button class="info-btn" id="create-workers-btn" ${workerExists || !canAffordWorker ? 'disabled' : 'onclick="createWorkers()"'}>Create</button>
         </span>
       </div>
     `;
@@ -691,8 +695,11 @@ function handleOutpostInvasion(tile, unit) {
 }
 
 function addTroops() {
+  const player = GAME_STATE.players[GAME_STATE.currentPlayerIndex];
   if (selectedTile.units.some(u => u.getType === 'soldier')) return;
-  let unit = new Units('soldier', GAME_STATE.players[GAME_STATE.currentPlayerIndex].playerName);
+  if (player.data.gold < 10) return;
+  player.data.gold -= 10;
+  let unit = new Units('soldier', player.playerName);
   unit.setPos = {x: selectedTile.col, y: selectedTile.row};
   selectedTile.units.push(unit);
   handleOutpostInvasion(selectedTile, unit);
@@ -702,8 +709,11 @@ function addTroops() {
 }
 
 function createWorkers() {
+  const player = GAME_STATE.players[GAME_STATE.currentPlayerIndex];
   if (selectedTile.units.some(u => u.getType === 'worker')) return;
-  let unit = new Units('worker', GAME_STATE.players[GAME_STATE.currentPlayerIndex].playerName);
+  if (player.data.gold < 5) return;
+  player.data.gold -= 5;
+  let unit = new Units('worker', player.playerName);
   unit.setPos = {x: selectedTile.col, y: selectedTile.row};
   selectedTile.units.push(unit);
   updatePanel(selectedTile);
