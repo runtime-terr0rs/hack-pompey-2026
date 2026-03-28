@@ -734,8 +734,8 @@ function executeAttack(toCol, toRow) {
   let attackSucceeded = true;
 
   if (enemyUnit.getType === 'soldier') {
-    const roll = Math.floor(Math.random() * 6) + 1;
-    attackSucceeded = roll > enemyUnit.getDefence;
+    const roll = Math.floor(Math.random() * 20) + 1;
+    attackSucceeded = roll > enemyUnit.getDefence + TILE_TYPES[targetTile.type].def;
   }
 
   selectedUnit.setMovement = Math.max(0, selectedUnit.getMovement - 2);
