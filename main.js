@@ -542,12 +542,14 @@ function updatePanel(tile) {
         <span class="info-label">train troops</span>
         <span class="info-val">
           <button class="info-btn" id="train-troops-btn" ${soldierExists || !canAffordSoldier ? 'disabled' : 'onclick="addTroops()"'}>Train</button>
+          <span class="info-val">+10g</span>
         </span>
       </div>
       <div class="info-row">
         <span class="info-label">create workers</span>
         <span class="info-val">
           <button class="info-btn" id="create-workers-btn" ${workerExists || !canAffordWorker ? 'disabled' : 'onclick="createWorkers()"'}>Create</button>
+          <span class="info-val">+5g</span>
         </span>
       </div>
     `;
