@@ -22,6 +22,8 @@ class Units {
     this.defence = UNIT_TYPES[type].defence;
     this.pos = {x: 0, y: 0};
     this.unitColour = UNIT_TYPES[type].unitColour;
+    this.movement = 0;
+    this.maxMovement = 0;
   } 
 
   get getType() {
@@ -44,12 +46,28 @@ class Units {
     return this.pos;
   }
 
+  get getMovement() {
+    return this.movement;
+  }
+
+  get getMaxMovement() {
+    return this.maxMovement;
+  }
+
   get getUnitColour() {
     return this.unitColour;
   }
 
   set setPos(pos) {
     this.pos = pos;
+  }
+
+  set setMovement(move) {
+    this.movement = move;
+  }
+
+  set setMaxMovement(max) {
+    this.maxMovement = max;
   }
 
   set setHealth(health) {
@@ -72,8 +90,8 @@ const TILE_TYPES = {
 };
 
 const UNIT_TYPES = {
-  worker: { label: 'Worker', cost: 50, strength: 1, health: 1, defence: 0, unitColour: '#f0c674' },
-  soldier: { label: 'Soldier', cost: 100, strength: 3, health: 3, defence: 2, unitColour: '#c94e50' },
+  worker:  { label: 'Worker',  cost: 50,  strength: 1, health: 1, defence: 0, unitColour: '#f0c674', maxMovement: 3 },
+  soldier: { label: 'Soldier', cost: 100, strength: 3, health: 3, defence: 2, unitColour: '#c94e50', maxMovement: 3 },
 };
 
 const GAME_STATE = {
@@ -154,6 +172,9 @@ function generateMap(seed = 42, numPlayers = 4) {
 }
 
 //  GEOMETRY
+let selectedUnit = null;
+let reachableTiles = new Set();
+
 function hexCenter(col, row, size) {
   const w = 2 * size;
   const h = Math.sqrt(3) * size;
@@ -171,12 +192,11 @@ function hexCorners(cx, cy, size) {
   return pts;
 }
 
-function pixelToHex(px, py, size, offsetX, offsetY) {
-  // Invert the camera transform first
-  const wx = (px - offsetX) / size;
-  const wy = (py - offsetY) / size;
+function pixelToHex(px, py, size, zoom, offsetX, offsetY) {
+  // Undo camera pan and zoom
+  const wx = (px - offsetX) / (size * zoom);
+  const wy = (py - offsetY) / (size * zoom);
 
-  // Brute-force nearest hex (fine for this grid size)
   let bestCol = 0, bestRow = 0, bestDist = Infinity;
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
@@ -190,6 +210,37 @@ function pixelToHex(px, py, size, offsetX, offsetY) {
   return { col: bestCol, row: bestRow };
 }
 
+function getTileNeighbours(col, row) {
+  const dirs = col % 2 === 0
+    ? [[1,0],[-1,0],[0,-1],[0,1],[1,-1],[-1,-1]]
+    : [[1,0],[-1,0],[0,-1],[0,1],[1,1],[-1,1]];
+  return dirs
+    .map(([dc, dr]) => ({ col: col + dc, row: row + dr }))
+    .filter(({ col, row }) => col >= 0 && col < COLS && row >= 0 && row < ROWS);
+}
+
+function getReachableTiles(startCol, startRow, movement) {
+  const reachable = new Set();
+  const queue = [{ col: startCol, row: startRow, movesLeft: movement }];
+  const visited = new Map();
+
+  while (queue.length) {
+    const { col, row, movesLeft } = queue.shift();
+    const key = `${col},${row}`;
+    if (visited.has(key) && visited.get(key) >= movesLeft) continue;
+    visited.set(key, movesLeft);
+
+    if (!(col === startCol && row === startRow)) reachable.add(key);
+
+    if (movesLeft > 0) {
+      for (const n of getTileNeighbours(col, row)) {
+        queue.push({ col: n.col, row: n.row, movesLeft: movesLeft - 1 });
+      }
+    }
+  }
+  return reachable;
+}
+
 //  TURN STATE
 function advanceTurn() {
   GAME_STATE.currentPlayerIndex = (GAME_STATE.currentPlayerIndex + 1) % GAME_STATE.players.length;
@@ -198,6 +249,13 @@ function advanceTurn() {
     GAME_STATE.turn++;
   }
   
+  // Reset all unit movement
+  for (const tile of tiles) {
+    for (const unit of tile.units) {
+      unit.setMovement = UNIT_TYPES[unit.getType].maxMovement;
+    }
+  }
+
   document.querySelector('#turn-number').textContent = GAME_STATE.turn;
   document.querySelector('#player-name').textContent = GAME_STATE.players[GAME_STATE.currentPlayerIndex].playerName;
 }
@@ -289,9 +347,22 @@ function draw() {
     const tdata = TILE_TYPES[tile.type];
     const isSelected = selectedTile && selectedTile.col === tile.col && selectedTile.row === tile.row;
 
-    const fill   = isSelected ? tdata.sel : tdata.color;
-    const stroke = isSelected ? '#e8d5a0' : '#1a2a1a';
-    const sw     = isSelected ? 2.5 : 1;
+    const isReachable = reachableTiles.has(`${tile.col},${tile.row}`);
+    const isUnitSelected = selectedUnit && selectedUnit.getPos.x === tile.col && selectedUnit.getPos.y === tile.row;
+
+    const fill = 
+        isUnitSelected ? '#4a7a9b'
+      : isReachable    ? '#2a5a3a'
+      : isSelected     ? tdata.sel
+      :                  tdata.color;
+
+    const stroke = 
+        isUnitSelected ? '#7ec8e3'
+      : isReachable    ? '#5aad7a'
+      : isSelected     ? '#e8d5a0'
+      :                  '#1a2a1a';
+    
+    const sw = (isReachable || isUnitSelected) ? 2 : isSelected ? 2.5 : 1;
 
     drawHex(ctx, x, y, size, fill, stroke, sw);
 
@@ -359,18 +430,20 @@ function updatePanel(tile) {
   `;
 
   if (tile.type.toLowerCase() === TILE_TYPES.outpost.label.toLowerCase()) {
+    const hasTroopOnTile = checkIfTileHasTroops(selectedTile);
+    const hasWorkerOnTile = checkIfTileHasWorkers(selectedTile);
     panel.innerHTML += `
       <div class="panel-header">Outpost Operations</div>
       <div class="info-row">
         <span class="info-label">train troops</span>
         <span class="info-val">
-        <button class="info-btn" id="train-troops-btn" onclick="addTroops()">Train</button>
+        <button class="info-btn" id="train-troops-btn" ${hasTroopOnTile ? 'disabled' : 'onclick="addTroops()"'}>Train</button>
         </span>
       </div>
       <div class="info-row">
         <span class="info-label">create workers</span>
         <span class="info-val">
-        <button class="info-btn" id="create-workers-btn" onclick="createWorkers()">Create</button>
+        <button class="info-btn" id="create-workers-btn" ${hasWorkerOnTile ? 'disabled' : 'onclick="createWorkers()"'}>Create</button>
         </span>
       </div>
     `;
@@ -378,7 +451,7 @@ function updatePanel(tile) {
   }
 }
 
-//  INPUT
+//  INPUT 
 canvas.addEventListener('mousedown', e => {
   cam.dragging   = true;
   cam.hasDragged = false;
@@ -405,16 +478,41 @@ canvas.addEventListener('mouseup', e => {
     const rect = canvas.getBoundingClientRect();
     const px = e.clientX - rect.left;
     const py = e.clientY - rect.top;
-    const { col, row } = pixelToHex(px, py, HEX_SIZE * cam.zoom, cam.x, cam.y);
+    const { col, row } = pixelToHex(px, py, HEX_SIZE, cam.zoom, cam.x, cam.y);
     const tile = tiles.find(t => t.col === col && t.row === row);
     if (tile) {
-      selectedTile = (selectedTile && selectedTile.col === col && selectedTile.row === row) ? null : tile;
+      const key = `${col},${row}`;
+
+      if (selectedUnit && reachableTiles.has(key)) {
+        const fromTile = tiles.find(t => t.col === selectedUnit.getPos.x && t.row === selectedUnit.getPos.y);
+        const moveCost = 1; // extend later for terrain costs
+        selectedUnit.setMovement = selectedUnit.getMovement - moveCost;
+        selectedUnit.setPos = { x: col, y: row };
+        fromTile.units = fromTile.units.filter(u => u !== selectedUnit);
+        tile.units.push(selectedUnit);
+        selectedUnit = null;
+        reachableTiles = new Set();
+        selectedTile = tile;
+
+      } else if (tile.units.length > 0 && tile.units.some(u => u.getMovement > 0)) {
+        selectedUnit = tile.units.find(u => u.getMovement > 0);
+        reachableTiles = getReachableTiles(col, row, selectedUnit.getMovement);
+        selectedTile = tile;
+
+      } else {
+        selectedUnit = null;
+        reachableTiles = new Set();
+        selectedTile = (selectedTile?.col === col && selectedTile?.row === row) ? null : tile;
+      }
+
       updatePanel(selectedTile);
       draw();
     }
   }
   cam.dragging = false;
 });
+
+
 
 canvas.addEventListener('mouseleave', () => {
   cam.dragging = false;
@@ -434,20 +532,56 @@ canvas.addEventListener('wheel', e => {
 }, { passive: false });
 
 function addTroops() {
+  if (checkIfTileHasTroops(selectedTile)) {
+    return false;
+  }
   let unit = new Units('soldier');
   unit.setPos = {x: selectedTile.col, y: selectedTile.row};
+  unit.setMovement = 0;
   selectedTile.units.push(unit);
   updatePanel(selectedTile);
   draw();
 }
 
+function checkIfTileHasTroops(tile){
+  if (tile.units.length === 0) {
+    return false;
+  }
+
+  selectedTile.units.forEach(unit => {
+    if (unit.getName() === 'troop') {
+      return true;
+    }
+  });
+
+  return false;
+}
+
 function createWorkers() {
+  if (checkIfTileHasWorkers(selectedTile)) {
+    return false;
+  }
   let unit = new Units('worker');
   unit.setPos = {x: selectedTile.col, y: selectedTile.row};
+  unit.setMovement = 0;
   selectedTile.units.push(unit);
   updatePanel(selectedTile);
   draw();
 };
+
+function checkIfTileHasWorkers(tile){
+  if (tile.units.length === 0) {
+    return false;
+  }
+
+  selectedTile.units.forEach(unit => {
+    if (unit.getName() === 'troop') {
+      return true;
+    }
+  });
+
+  return false;
+}
 
 // Event listeners
 document.querySelector('#end-turn-btn').addEventListener('click', () => {
