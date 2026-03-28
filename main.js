@@ -848,17 +848,50 @@ canvas.addEventListener('wheel', e => {
   draw();
 }, { passive: false });
 
-function defeatPlayer(playerName) {
+function defeatPlayer(playerName, attackerName = null) {
   const player = GAME_STATE.players.find(p => p.playerName === playerName);
   if (!player || player.data.defeated) return;
+
+  const attacker = attackerName ? GAME_STATE.players.find(p => p.playerName === attackerName) : null;
+  if (attacker) {
+    attacker.data.gold += player.data.gold;
+  }
+
+  player.data.gold = 0;
   player.data.defeated = true;
+
+  for (const tile of tiles) {
+    for (const unit of tile.units) {
+      if (unit.getOwner === playerName) {
+        unit.setOwner = attackerName || unit.getOwner;
+        if (unit.getType === 'soldier') {
+          unit.type = 'worker';
+          unit.strength = UNIT_TYPES.worker.strength;
+          unit.health = UNIT_TYPES.worker.health;
+          unit.defence = UNIT_TYPES.worker.defence;
+          unit.unitColour = UNIT_TYPES.worker.unitColour;
+          unit.maxMovement = UNIT_TYPES.worker.maxMovement;
+          if (unit.getMovement > unit.getMaxMovement) {
+            unit.setMovement = unit.getMaxMovement;
+          }
+        }
+      }
+    }
+
+    if (attackerName && tile.owner === playerName) {
+      tile.owner = attackerName;
+    }
+  }
+
+  updateStatsPanel();
   alert(`${playerName} has been defeated!`);
 }
 
 function handleOutpostInvasion(tile, unit) {
   if (!tile || tile.type !== 'outpost' || !unit || unit.getType !== 'soldier') return;
   if (!tile.owner || tile.owner === unit.getOwner) return;
-  defeatPlayer(tile.owner);
+  const defeatedPlayer = tile.owner;
+  defeatPlayer(defeatedPlayer, unit.getOwner);
   tile.owner = unit.getOwner;
 }
 
@@ -901,8 +934,8 @@ function updateStatsPanel() {
             ${p.data.defeated
                 ? '<span class="player-stat-defeated">Defeated</span>'
                 : `<span class="player-stat-gold">${p.data.gold}g</span>
-                   <span class="player-stat-units">⚔ ${soldierCount}</span>`}
-                   <span class="player-stat-units">🛠 ${workerCount}</span>
+                   <span class="player-stat-units">⚔ ${soldierCount}</span>
+                   <span class="player-stat-units">🛠 ${workerCount}</span>`}
         </div>
     `}).join('');
 }
