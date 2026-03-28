@@ -3,6 +3,7 @@ class Player {
   constructor() {
     this.gold = 200;
     this.outpostCoords = {x: 0, y: 0};
+    this.colour;
     this.defeated = false;
   }
 
@@ -12,6 +13,14 @@ class Player {
 
   set setGold(gold) {
     this.getGold = gold;
+  }
+
+  set setUnitColour(colour) {
+    this.colour = colour;
+  } 
+
+  get getUnitColour() {
+    return this.colour;
   }
 }
 
@@ -24,6 +33,7 @@ class Units {
     this.defence = UNIT_TYPES[type].defence;
     this.pos = {x: 0, y: 0};
     this.unitColour = UNIT_TYPES[type].unitColour;
+    this.owner = null;
   } 
 
   get getType() {
@@ -54,16 +64,16 @@ class Units {
     return this.owner;
   }
 
-  set setOwner(owner) {
-    this.owner = owner;
-  }
-
   set setPos(pos) {
     this.pos = pos;
   }
 
   set setHealth(health) {
     this.health = health;
+  }
+
+  set setOwner(owner) {
+    this.owner = owner;
   }
 }
 
@@ -90,10 +100,10 @@ const GAME_STATE = {
   turn: 1,
   currentPlayerIndex: 0,
   players: [
-    {id: 1, playerName: 'Player 1', data: new Player()},
-    {id: 2, playerName: 'Player 2', data: new Player()},
-    {id: 3, playerName: 'Player 3', data: new Player()},
-    {id: 4, playerName: 'Player 4', data: new Player()},
+    {id: 1, playerName: 'Player 1', data: (() => { let p = new Player(); p.setUnitColour = '#0010f7'; return p; })()},
+    {id: 2, playerName: 'Player 2', data: (() => { let p = new Player(); p.setUnitColour = '#e100ff'; return p; })()},
+    {id: 3, playerName: 'Player 3', data: (() => { let p = new Player(); p.setUnitColour = '#00ac0e'; return p; })()},
+    {id: 4, playerName: 'Player 4', data: (() => { let p = new Player(); p.setUnitColour = '#ffee00'; return p; })()},
   ]
 };
 //  MAP GENERATION
@@ -265,20 +275,29 @@ function drawHex(ctx, cx, cy, size, fillColor, strokeColor, strokeWidth = 1) {
   ctx.stroke();
 }
 
-function drawUnits(ctx, units, x, y) {
+function drawUnits(ctx, tile, x, y) {
   const unitSize = 10;
   const radius = 15;
-  const angleStep = (2 * Math.PI) / units.length;
+  const angleStep = (2 * Math.PI) / tile.units.length;
   let angle = 0;
-  for (const unit of units) {
+  for (const unit of tile.units) {
     const unitX = x + radius * Math.cos(angle);
     const unitY = y + radius * Math.sin(angle);
     ctx.fillStyle = unit.getUnitColour;
     ctx.beginPath();
     ctx.arc(unitX, unitY, unitSize / 2, 0, 2 * Math.PI);
+    let ownerColour = GAME_STATE.players.find(p => p.playerName === unit.getOwner);
+    ctx.strokeStyle = ownerColour.data.getUnitColour;
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
     ctx.fill();
     angle += angleStep;
   }
+}
+
+function getUnitsFromSelectedTile() {
+  if (!selectedTile) return [];
+  return selectedTile.units;
 }
 
 function draw() {
@@ -317,7 +336,7 @@ function draw() {
 
     // Draw units on tile
     if (tile.units.length > 0) {
-      drawUnits(ctx, tile.units, x, y);
+      drawUnits(ctx, tile, x, y);
     }
 
     // Selected glow ring
@@ -471,6 +490,7 @@ function handleOutpostInvasion(tile, unit) {
 function addTroops() {
   let unit = new Units('soldier', GAME_STATE.players[GAME_STATE.currentPlayerIndex].playerName);
   unit.setPos = {x: selectedTile.col, y: selectedTile.row};
+  unit.setOwner = selectedTile.owner;
   selectedTile.units.push(unit);
   handleOutpostInvasion(selectedTile, unit);
   updatePanel(selectedTile);
@@ -480,6 +500,7 @@ function addTroops() {
 function createWorkers() {
   let unit = new Units('worker', GAME_STATE.players[GAME_STATE.currentPlayerIndex].playerName);
   unit.setPos = {x: selectedTile.col, y: selectedTile.row};
+  unit.setOwner = selectedTile.owner;
   selectedTile.units.push(unit);
   updatePanel(selectedTile);
   draw();
