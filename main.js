@@ -534,18 +534,20 @@ function updatePanel(tile) {
 
   // Outpost operations
   if (tile.type === 'outpost' && tile.owner === GAME_STATE.players[GAME_STATE.currentPlayerIndex].playerName) {
+    const soldierExists = tile.units.some(u => u.getType === 'soldier');
+    const workerExists  = tile.units.some(u => u.getType === 'worker');
     panel.innerHTML += `
       <div class="panel-header">Outpost Operations</div>
       <div class="info-row">
         <span class="info-label">train troops</span>
         <span class="info-val">
-          <button class="info-btn" id="train-troops-btn" onclick="addTroops()">Train</button>
+          <button class="info-btn" id="train-troops-btn" ${soldierExists ? 'disabled' : 'onclick="addTroops()"'}>Train</button>
         </span>
       </div>
       <div class="info-row">
         <span class="info-label">create workers</span>
         <span class="info-val">
-          <button class="info-btn" id="create-workers-btn" onclick="createWorkers()">Create</button>
+          <button class="info-btn" id="create-workers-btn" ${workerExists ? 'disabled' : 'onclick="createWorkers()"'}>Create</button>
         </span>
       </div>
     `;
@@ -675,9 +677,9 @@ function handleOutpostInvasion(tile, unit) {
 }
 
 function addTroops() {
+  if (selectedTile.units.some(u => u.getType === 'soldier')) return;
   let unit = new Units('soldier', GAME_STATE.players[GAME_STATE.currentPlayerIndex].playerName);
   unit.setPos = {x: selectedTile.col, y: selectedTile.row};
-  unit.setOwner = selectedTile.owner;
   selectedTile.units.push(unit);
   handleOutpostInvasion(selectedTile, unit);
   updatePanel(selectedTile);
@@ -686,9 +688,9 @@ function addTroops() {
 }
 
 function createWorkers() {
+  if (selectedTile.units.some(u => u.getType === 'worker')) return;
   let unit = new Units('worker', GAME_STATE.players[GAME_STATE.currentPlayerIndex].playerName);
   unit.setPos = {x: selectedTile.col, y: selectedTile.row};
-  unit.setOwner = selectedTile.owner;
   selectedTile.units.push(unit);
   updatePanel(selectedTile);
   updateStatsPanel();
