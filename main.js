@@ -386,6 +386,14 @@ function drawUnits(ctx, tile, x, y) {
     }
 
     ctx.globalAlpha = 1.0;
+    const tileKey = `${tile.col},${tile.row}`;
+    if (selectedAction === 'attack' && selectedUnit && reachableTiles.has(tileKey) && unit.getOwner !== selectedUnit.getOwner) {
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(unitX, unitY, unitSize / 2 + 3, 0, 2 * Math.PI);
+      ctx.stroke();
+    }
     angle += angleStep;
   }
 }
@@ -426,12 +434,14 @@ function draw() {
 
     const fill =
         isUnitOrigin ? '#4a7a9b'
+      : (selectedAction === 'attack' && isReachable) ? '#9a2a2a'
       : isReachable  ? '#2a5a3a'
       : isSelected   ? tdata.sel
       :                tdata.color;
 
     const stroke =
         isUnitOrigin ? '#7ec8e3'
+      : (selectedAction === 'attack' && isReachable) ? '#ffffff'
       : isReachable  ? '#5aad7a'
       : isSelected   ? '#e8d5a0'
       :                '#1a2a1a';
@@ -528,14 +538,22 @@ function updatePanel(tile) {
         <div class="info-row">
           <span class="info-label">Soldier (${soldier.getMovement}/${soldier.getMaxMovement} actions)</span>
           <span class="info-val">
-            <button class="info-btn" ${canMove ? `onclick="startMove('soldier')"` : 'disabled'}>
-              ${isMoving ? 'Moving…' : 'Move'}
-            </button>
-            <button class="info-btn" ${canAttack ? 'onclick="startAttack()"' : 'disabled'}>
-              Attack
-            </button>
+            ${selectedUnit === soldier && selectedAction === 'attack'
+              ? 'Attacking...'
+              : `<button class="info-btn" ${canMove ? `onclick="startMove('soldier')"` : 'disabled'}>${isMoving ? 'Moving…' : 'Move'}</button>`}
           </span>
         </div>`;
+      if (!(selectedUnit === soldier && selectedAction === 'attack')) {
+        panel.innerHTML += `
+          <div class="info-row">
+            <span class="info-label">&nbsp;</span>
+            <span class="info-val">
+              <button class="info-btn" ${canAttack ? 'onclick="startAttack()"' : 'disabled'}>
+                Attack
+              </button>
+            </span>
+          </div>`;
+      }
     }
 
     if (selectedUnit && (selectedUnit === worker || selectedUnit === soldier)) {
@@ -608,6 +626,7 @@ function startAttack() {
   selectedUnit = unit;
   selectedAction = 'attack';
   selectedUnit.setPos = { x: selectedTile.col, y: selectedTile.row };
+  selectedUnit.setMovement = selectedUnit.getMovement - 1;
 
   reachableTiles = getAdjacentReachableTiles(selectedTile.col, selectedTile.row);
   reachableTiles = new Set([...reachableTiles].filter(key => {
@@ -686,6 +705,14 @@ function executeAttack(toCol, toRow) {
   if (!targetTile || !targetTile.units.some(u => u.getOwner && u.getOwner !== selectedUnit.getOwner)) {
     cancelMove();
     return;
+  }
+
+  const enemyIndex = targetTile.units.findIndex(u => u.getOwner && u.getOwner !== selectedUnit.getOwner);
+  if (enemyIndex !== -1) {
+    targetTile.units.splice(enemyIndex, 1);
+    if (targetTile.type !== 'outpost' && targetTile.units.length === 0) {
+      targetTile.owner = null;
+    }
   }
 
   selectedUnit.setMovement = Math.max(0, selectedUnit.getMovement - 1);
