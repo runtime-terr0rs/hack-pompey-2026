@@ -529,15 +529,15 @@ function updatePanel(tile) {
     panel.innerHTML += `<div class="panel-header">Unit Actions</div>`;
 
     if (worker) {
-      const isMoving = selectedUnit === worker;
+      const isMoving = selectedUnit === worker && selectedAction === 'move';
       const canMove  = worker.getMovement > 0;
       panel.innerHTML += `
         <div class="info-row">
           <span class="info-label">Worker (${worker.getMovement}/${worker.getMaxMovement} actions)</span>
           <span class="info-val">
-            <button class="info-btn" ${canMove ? `onclick="startMove('worker')"` : 'disabled'}>
-              ${isMoving ? 'Moving…' : 'Move'}
-            </button>
+            ${isMoving
+              ? `<button class="info-btn" disabled>Moving…</button>`
+              : `<button class="info-btn" ${canMove ? `onclick="startMove('worker')"` : 'disabled'}>${worker.getMovement > 0 ? 'Move' : 'Move'}</button>`}
           </span>
         </div>`;
     }
@@ -550,13 +550,16 @@ function updatePanel(tile) {
         return neighbourTile && neighbourTile.units.some(u => u.getOwner && u.getOwner !== soldier.getOwner);
       });
       const canAttack = soldier.getMovement >= 2 && enemyAdjacent;
+      const isMovingAttack = selectedUnit === soldier && selectedAction === 'move';
       panel.innerHTML += `
         <div class="info-row">
           <span class="info-label">Soldier (${soldier.getMovement}/${soldier.getMaxMovement} actions)</span>
           <span class="info-val">
             ${selectedUnit === soldier && selectedAction === 'attack'
-              ? 'Attacking...'
-              : `<button class="info-btn" ${canMove ? `onclick="startMove('soldier')"` : 'disabled'}>${isMoving ? 'Moving…' : 'Move'}</button>`}
+              ? `<button class="info-btn" disabled>Attacking…</button>`
+              : isMovingAttack
+                ? `<button class="info-btn" disabled>Moving…</button>`
+                : `<button class="info-btn" ${canMove ? `onclick="startMove('soldier')"` : 'disabled'}>${isMoving ? 'Moving…' : 'Move'}</button>`}
           </span>
         </div>`;
       if (selectedAction !== 'move' && !(selectedUnit === soldier && selectedAction === 'attack')) {
