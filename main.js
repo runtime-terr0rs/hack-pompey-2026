@@ -2,6 +2,7 @@
 class Player {
   constructor() {
     this.gold = 200;
+    this.colour = 'white';
     this.outpostCoords = {x: 0, y: 0}
   }
 
@@ -11,6 +12,10 @@ class Player {
 
   set setGold(gold) {
     this.getGold = gold;
+  }
+
+  get getColour() {
+    return this.colour;
   }
 }
 
@@ -24,6 +29,8 @@ class Units {
     this.unitColour = UNIT_TYPES[type].unitColour;
     this.movement = 0;
     this.maxMovement = 0;
+    this.owner = null;
+    this.faction = null;
   } 
 
   get getType() {
@@ -58,6 +65,18 @@ class Units {
     return this.unitColour;
   }
 
+  get getName() {
+    return this.type;
+  }
+
+  get getOwner() {
+    return this.owner;
+  }
+
+  get getFaction() {
+    return this.faction;
+  }
+
   set setPos(pos) {
     this.pos = pos;
   }
@@ -72,6 +91,14 @@ class Units {
 
   set setHealth(health) {
     this.health = health;
+  }
+
+  set setOwner(player) {
+    this.owner = player;
+  }
+
+  set setFaction(faction) {
+    this.faction = faction;
   }
 }
 
@@ -98,10 +125,10 @@ const GAME_STATE = {
   turn: 1,
   currentPlayerIndex: 0,
   players: [
-    {id: 1, playerName: 'Player 1', data: new Player()},
-    {id: 2, playerName: 'Player 2', data: new Player()},
-    {id: 3, playerName: 'Player 3', data: new Player()},
-    {id: 4, playerName: 'Player 4', data: new Player()},
+    {id: 1, playerName: 'Player 1', data: new Player(colour='#0000ff')},
+    {id: 2, playerName: 'Player 2', data: new Player(colour='#00ff00')},
+    {id: 3, playerName: 'Player 3', data: new Player(colour='#ff0000')},
+    {id: 4, playerName: 'Player 4', data: new Player(colour='#ffff00')},
   ]
 };
 //  MAP GENERATION
@@ -303,7 +330,7 @@ function drawHex(ctx, cx, cy, size, fillColor, strokeColor, strokeWidth = 1) {
   ctx.stroke();
 }
 
-function drawUnits(ctx, units, x, y) {
+function drawUnits(ctx, units, x, y, owner = null) {
   const unitSize = 10;
   const radius = 15;
   const angleStep = (2 * Math.PI) / units.length;
@@ -315,6 +342,12 @@ function drawUnits(ctx, units, x, y) {
     ctx.beginPath();
     ctx.arc(unitX, unitY, unitSize / 2, 0, 2 * Math.PI);
     ctx.fill();
+    if (owner != null) {
+      owner = GAME_STATE.players.find(p => p.playerName === owner).data;
+      ctx.strokeStyle = owner.Date.getColour();
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
     angle += angleStep;
   }
 }
@@ -368,7 +401,7 @@ function draw() {
 
     // Draw units on tile
     if (tile.units.length > 0) {
-      drawUnits(ctx, tile.units, x, y);
+      drawUnits(ctx, tile.units, x, y, tile.owner);
     }
 
     // Selected glow ring
@@ -538,6 +571,7 @@ function addTroops() {
   let unit = new Units('soldier');
   unit.setPos = {x: selectedTile.col, y: selectedTile.row};
   unit.setMovement = 0;
+  unit.setOwner = selectedTile.owner
   selectedTile.units.push(unit);
   updatePanel(selectedTile);
   draw();
@@ -563,6 +597,7 @@ function createWorkers() {
   }
   let unit = new Units('worker');
   unit.setPos = {x: selectedTile.col, y: selectedTile.row};
+  unit.setOwner = selectedTile.owner;
   unit.setMovement = 0;
   selectedTile.units.push(unit);
   updatePanel(selectedTile);
