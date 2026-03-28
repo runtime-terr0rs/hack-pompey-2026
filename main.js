@@ -490,7 +490,7 @@ function updatePanel(tile) {
   const worker  = tile.units.find(u => u.getType === 'worker');
   const soldier = tile.units.find(u => u.getType === 'soldier');
 
-  if (worker || soldier) {
+  if ((worker || soldier) && tile.owner === GAME_STATE.players[GAME_STATE.currentPlayerIndex].playerName) {
     panel.innerHTML += `<div class="panel-header">Unit Actions</div>`;
 
     if (worker) {
