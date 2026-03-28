@@ -770,7 +770,7 @@ function executeAttack(toCol, toRow) {
   let attackSucceeded = true;
 
   if (enemyUnit.getType === 'soldier') {
-    const roll = Math.floor(Math.random() * 12) + 1;
+    const roll = Math.floor(Math.random() * 8) + 1;
     attackSucceeded = roll + selectedUnit.getStrength > enemyUnit.getDefence + TILE_TYPES[targetTile.type].def;
     updateCombatDisplay(selectedUnit, enemyUnit, targetTile, roll, attackSucceeded);
   }
