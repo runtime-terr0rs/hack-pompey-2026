@@ -349,3 +349,69 @@ canvas.dragging { cursor: grabbing; }
     font-size: 0.75rem;
     font-style: italic;
 }
+/* ── COMBAT LOG ── */
+#combat-display {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    overflow: hidden;
+    background-color: var(--panel-bg);
+}
+
+.combat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.combat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 6px 0;
+    border-bottom: 1px solid #1e2e3a;
+    font-size: 1.5rem;
+}
+
+.combat-row:last-child { border-bottom: none; }
+
+.combat-label {
+    color: var(--text-dim);
+    font-size: 1.4rem;
+}
+
+.combat-val {
+    color: var(--highlight);
+    font-weight: 600;
+}
+
+.combat-row.outcome {
+    margin-top: 4px;
+    border-bottom: none;
+}
+
+.combat-val.success {
+    color: #5aad7a;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.05em;
+}
+
+.combat-val.failure {
+    color: var(--red);
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.05em;
+}
+
+/* ── UNIT BADGES ── */
+.unit-badge {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 2px;
+    border: 1px solid;
+}
+
+.badge-worker  { color: #f0c674; border-color: #a07830; background: #1e1a0a; }
+.badge-soldier { color: #c94e50; border-color: #8a2a2a; background: #1e0a0a; }

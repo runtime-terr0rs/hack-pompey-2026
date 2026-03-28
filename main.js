@@ -664,6 +664,27 @@ function startAttack() {
     const tile = tiles.find(t => t.col === col && t.row === row);
     return tile && tile.units.some(u => u.getOwner && u.getOwner !== selectedUnit.getOwner);
   }));
+  
+  // Display attack preview with selected unit info
+  const combatDisplay = document.getElementById('combat-display');
+  const tileDefence = TILE_TYPES[selectedTile.type].def;
+  const attackerUnit = selectedUnit;
+  combatDisplay.innerHTML = '';
+  
+  // Show preview for each enemy unit in reachable tiles
+  for (const key of reachableTiles) {
+    const [col, row] = key.split(',').map(Number);
+    const tile = tiles.find(t => t.col === col && t.row === row);
+    if (tile) {
+      for (const enemyUnit of tile.units) {
+        if (enemyUnit.getOwner && enemyUnit.getOwner !== selectedUnit.getOwner) {
+          updateCombatDisplay(attackerUnit, enemyUnit, tile, null, null);
+          break;
+        }
+      }
+    }
+  }
+  
   updatePanel(selectedTile);
   draw();
 }
@@ -750,7 +771,8 @@ function executeAttack(toCol, toRow) {
 
   if (enemyUnit.getType === 'soldier') {
     const roll = Math.floor(Math.random() * 12) + 1;
-    attackSucceeded = roll > enemyUnit.getDefence + TILE_TYPES[targetTile.type].def;
+    attackSucceeded = roll + selectedUnit.getStrength > enemyUnit.getDefence + TILE_TYPES[targetTile.type].def;
+    updateCombatDisplay(selectedUnit, enemyUnit, targetTile, roll, attackSucceeded);
   }
 
   selectedUnit.setMovement = Math.max(0, selectedUnit.getMovement - 2);
@@ -831,6 +853,7 @@ canvas.addEventListener('mouseup', e => {
           executeAttack(col, row);
         } else {
           executeMove(col, row);
+          document.getElementById('combat-div').style.display = 'none';
         }
       } else {
         cancelMove();
@@ -951,6 +974,49 @@ function updateStatsPanel() {
         </div>
     `}).join('');
 }
+
+  function updateCombatDisplay(attacker, defender, targetTile, roll, attackSucceeded) {
+    document.getElementById('combat-div').style.display = 'block';
+    const combatDisplay = document.getElementById('combat-display');
+    const defenceBonus = TILE_TYPES[targetTile.type].def;
+    const totalDefence = defender.getDefence + defenceBonus;
+    
+    combatDisplay.innerHTML = `
+      <div class="combat-info">
+      <span class="panel-header""">Attacking Info</span>
+      <div class="combat-row">
+      <span class="combat-label">Attacker:</span>
+      <span class="combat-val">${attacker.getOwner}</span>
+      </div>
+      <div class="combat-row">
+      <span class="combat-label">Defender:</span>
+      <span class="combat-val">${defender.getOwner}</span>
+      </div>
+      <div class="combat-row">
+      <span class="combat-label">Attack:</span>
+      <span class="combat-val">${attacker.getStrength}</span>
+      </div>
+      <div class="combat-row">
+      <span class="combat-label">Defence:</span>
+      <span class="combat-val">${totalDefence} (base ${defender.getDefence} + terrain ${defenceBonus})</span>
+      </div>
+      ${roll !== null ? `
+      <div class="combat-row">
+      <span class="combat-label">Roll:</span>
+      <span class="combat-val">${roll}</span>
+      </div>
+      ` : ''}
+      ${attackSucceeded !== null ? `
+      <div class="combat-row outcome">
+      <span class="combat-label">Outcome:</span>
+      <span class="combat-val ${attackSucceeded ? 'success' : 'failure'}">
+      ${attackSucceeded ? '✓ Hit' : '✗ Miss'}
+      </span>
+      </div>
+      ` : ''}
+      </div>
+    `;
+  }
 
 // Event listeners
 document.querySelector('#end-turn-btn').addEventListener('click', () => {
