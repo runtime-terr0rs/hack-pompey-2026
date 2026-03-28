@@ -83,12 +83,12 @@ const ROWS = 12;
 const HEX_SIZE = 38; // flat-top: distance from centre to corner
 
 const TILE_TYPES = {
-  outpost: { label: 'Alien Caverns',   gold: 10, def: 5,  color: '#273041', sel: '#54778a' },
+  outpost: { label: 'OpenArmy Barracks',   gold: 10, def: 5,  color: '#273041', sel: '#54778a' },
   plains:  { label: 'AI Data Center Flood Plains',    gold: 1,  def: 0,  color: '#c4ad9e', sel: '#ede9e7' },
   wastes:  { label: 'Vape Zeppelin Factories',    gold: 0,  def: 2,  color: '#596c48', sel: '#86a966' },
   dunes:   { label: "Flying Car Dealerships",     gold: 0,  def: 3,  color: '#813D30', sel: '#b17467' },
   mines:   { label: 'Caffeine Glaciers',     gold: 5,  def: 0,  color: '#9A6546', sel: '#aa8b79' },
-  scav:    { label: 'OpenArmy Barracks', gold: 20, def: 0,  color: '#362d27', sel: '#aa8b79' },
+  scav:    { label: 'Alien Caverns', gold: 20, def: 0,  color: '#362d27', sel: '#aa8b79' },
 };
 
 const UNIT_TYPES = {
@@ -397,7 +397,7 @@ function updatePanel(tile) {
     </div>
   `;
 
-  if (tile.type.toLowerCase() === TILE_TYPES.outpost.label.toLowerCase()) {
+  if (tile.type === 'outpost') {
     panel.innerHTML += `
       <div class="panel-header">Outpost Operations</div>
       <div class="info-row">
