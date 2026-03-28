@@ -2,7 +2,8 @@
 class Player {
   constructor() {
     this.gold = 200;
-    this.outpostCoords = {x: 0, y: 0}
+    this.outpostCoords = {x: 0, y: 0};
+    this.defeated = false;
   }
 
   get getGold () {
@@ -15,8 +16,9 @@ class Player {
 }
 
 class Units {
-  constructor(type) {
+  constructor(type, owner = null) {
     this.type = type;
+    this.owner = owner;
     this.strength = UNIT_TYPES[type].strength;
     this.health = UNIT_TYPES[type].health;
     this.defence = UNIT_TYPES[type].defence;
@@ -48,6 +50,14 @@ class Units {
     return this.unitColour;
   }
 
+  get getOwner() {
+    return this.owner;
+  }
+
+  set setOwner(owner) {
+    this.owner = owner;
+  }
+
   set setPos(pos) {
     this.pos = pos;
   }
@@ -63,12 +73,12 @@ const ROWS = 12;
 const HEX_SIZE = 38; // flat-top: distance from centre to corner
 
 const TILE_TYPES = {
-  outpost: { label: 'Outpost',   gold: 10, def: 5,  color: '#273041', sel: '#54778a' },
-  plains:  { label: 'Plains',    gold: 1,  def: 0,  color: '#c4ad9e', sel: '#ede9e7' },
-  wastes:  { label: 'Wastes',    gold: 0,  def: 2,  color: '#596c48', sel: '#86a966' },
-  dunes:   { label: 'Dunes',     gold: 0,  def: 3,  color: '#813D30', sel: '#b17467' },
-  mines:   { label: 'Mines',     gold: 5,  def: 0,  color: '#9A6546', sel: '#aa8b79' },
-  scav:    { label: 'Scav Site', gold: 20, def: 0,  color: '#362d27', sel: '#aa8b79' },
+  outpost: { label: 'Alien Caverns',   gold: 10, def: 5,  color: '#273041', sel: '#54778a' },
+  plains:  { label: 'AI Data Center Flood Plains',    gold: 1,  def: 0,  color: '#c4ad9e', sel: '#ede9e7' },
+  wastes:  { label: 'Vape Zeppelin Factories',    gold: 0,  def: 2,  color: '#596c48', sel: '#86a966' },
+  dunes:   { label: "Flying Car Dealerships",     gold: 0,  def: 3,  color: '#813D30', sel: '#b17467' },
+  mines:   { label: 'Caffeine Glaciers',     gold: 5,  def: 0,  color: '#9A6546', sel: '#aa8b79' },
+  scav:    { label: 'OpenArmy Barracks', gold: 20, def: 0,  color: '#362d27', sel: '#aa8b79' },
 };
 
 const UNIT_TYPES = {
@@ -191,8 +201,18 @@ function pixelToHex(px, py, size, offsetX, offsetY) {
 }
 
 //  TURN STATE
+function getNextActivePlayerIndex(startIndex) {
+  let nextIndex = (startIndex + 1) % GAME_STATE.players.length;
+  let attempts = 0;
+  while (GAME_STATE.players[nextIndex].data.defeated && attempts < GAME_STATE.players.length) {
+    nextIndex = (nextIndex + 1) % GAME_STATE.players.length;
+    attempts++;
+  }
+  return nextIndex;
+}
+
 function advanceTurn() {
-  GAME_STATE.currentPlayerIndex = (GAME_STATE.currentPlayerIndex + 1) % GAME_STATE.players.length;
+  GAME_STATE.currentPlayerIndex = getNextActivePlayerIndex(GAME_STATE.currentPlayerIndex);
   
   if (GAME_STATE.currentPlayerIndex === 0) {
     GAME_STATE.turn++;
@@ -433,16 +453,32 @@ canvas.addEventListener('wheel', e => {
   draw();
 }, { passive: false });
 
+function defeatPlayer(playerName) {
+  const player = GAME_STATE.players.find(p => p.playerName === playerName);
+  if (!player || player.data.defeated) return;
+  player.data.defeated = true;
+  alert(`${playerName} has been defeated!`);
+}
+
+function handleOutpostInvasion(tile, unit) {
+  if (!tile || tile.type !== 'outpost' || !unit || unit.getType !== 'soldier') return;
+  if (!tile.owner || tile.owner === unit.getOwner) return;
+
+  defeatPlayer(tile.owner);
+  tile.owner = unit.getOwner;
+}
+
 function addTroops() {
-  let unit = new Units('soldier');
+  let unit = new Units('soldier', GAME_STATE.players[GAME_STATE.currentPlayerIndex].playerName);
   unit.setPos = {x: selectedTile.col, y: selectedTile.row};
   selectedTile.units.push(unit);
+  handleOutpostInvasion(selectedTile, unit);
   updatePanel(selectedTile);
   draw();
 }
 
 function createWorkers() {
-  let unit = new Units('worker');
+  let unit = new Units('worker', GAME_STATE.players[GAME_STATE.currentPlayerIndex].playerName);
   unit.setPos = {x: selectedTile.col, y: selectedTile.row};
   selectedTile.units.push(unit);
   updatePanel(selectedTile);
