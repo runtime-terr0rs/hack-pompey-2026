@@ -398,7 +398,7 @@ function updatePanel(tile) {
     </div>
   `;
 
-  if (tile.type === 'outpost') {
+  if (tile.type === 'outpost' && tile.owner === GAME_STATE.players[GAME_STATE.currentPlayerIndex].playerName) {
     panel.innerHTML += `
       <div class="panel-header">Outpost Operations</div>
       <div class="info-row">
