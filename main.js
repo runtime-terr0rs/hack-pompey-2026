@@ -37,10 +37,10 @@ class Units {
     this.maxMovement = UNIT_TYPES[type].maxMovement;
 
     if (type === 'soldier' && owner) {
-      if (owner === "So'ton & Slimes") {
+      if (owner === "So'ton Slimes") {
         this.strength += 1;
       }
-      if (owner === 'M27 ghouls') {
+      if (owner === 'M27 Ghouls') {
         this.maxMovement = Math.max(this.maxMovement, 3);
       }
       if (owner === 'The Spinnaker Scalers') {
@@ -90,7 +90,7 @@ const GAME_STATE = {
   players: [
     {id: 1, playerName: 'The Spinnaker Scalers', data: (() => { let p = new Player(); p.setUnitColour = '#0010f7'; return p; })()},
     {id: 2, playerName: "So'ton Slimes", data: (() => { let p = new Player(); p.setUnitColour = '#e100ff'; return p; })()},
-    {id: 3, playerName: 'M27 ghouls', data: (() => { let p = new Player(); p.setUnitColour = '#00ac0e'; return p; })()},
+    {id: 3, playerName: 'M27 Ghouls', data: (() => { let p = new Player(); p.setUnitColour = '#00ac0e'; return p; })()},
     // {id: 4, playerName: 'The Hovercraft Heretics', data: (() => { let p = new Player(); p.setUnitColour = '#ffee00'; return p; })()},
   ]
 };
@@ -749,7 +749,7 @@ function executeAttack(toCol, toRow) {
   let attackSucceeded = true;
 
   if (enemyUnit.getType === 'soldier') {
-    const roll = Math.floor(Math.random() * 20) + 1;
+    const roll = Math.floor(Math.random() * 12) + 1;
     attackSucceeded = roll > enemyUnit.getDefence + TILE_TYPES[targetTile.type].def;
   }
 
