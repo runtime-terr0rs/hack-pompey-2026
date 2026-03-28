@@ -35,6 +35,18 @@ class Units {
     this.unitColour = UNIT_TYPES[type].unitColour;
     this.movement = 0;
     this.maxMovement = UNIT_TYPES[type].maxMovement;
+
+    if (type === 'soldier' && owner) {
+      if (owner === "So'ton & Slimes") {
+        this.strength += 1;
+      }
+      if (owner === 'M27 ghouls') {
+        this.maxMovement = Math.max(this.maxMovement, 3);
+      }
+      if (owner === 'The Spinnaker Scalers') {
+        this.defence += 1;
+      }
+    }
   } 
 
   get getType()        { return this.type; }
@@ -77,7 +89,7 @@ const GAME_STATE = {
   currentPlayerIndex: 0,
   players: [
     {id: 1, playerName: 'The Spinnaker Scalers', data: (() => { let p = new Player(); p.setUnitColour = '#0010f7'; return p; })()},
-    {id: 2, playerName: "So'ton & Slimes", data: (() => { let p = new Player(); p.setUnitColour = '#e100ff'; return p; })()},
+    {id: 2, playerName: "So'ton Slimes", data: (() => { let p = new Player(); p.setUnitColour = '#e100ff'; return p; })()},
     {id: 3, playerName: 'M27 ghouls', data: (() => { let p = new Player(); p.setUnitColour = '#00ac0e'; return p; })()},
     // {id: 4, playerName: 'The Hovercraft Heretics', data: (() => { let p = new Player(); p.setUnitColour = '#ffee00'; return p; })()},
   ]
