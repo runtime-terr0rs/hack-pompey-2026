@@ -254,6 +254,7 @@ function bfsDistance(fromCol, fromRow, toCol, toRow) {
 
 //  MOVEMENT STATE
 let selectedUnit = null;
+let selectedAction = null;
 let reachableTiles = new Set();
 
 //  TURN STATE
@@ -269,6 +270,7 @@ function getNextActivePlayerIndex(startIndex) {
 
 function advanceTurn() {
   selectedUnit = null;
+  selectedAction = null;
   reachableTiles = new Set();
 
   GAME_STATE.currentPlayerIndex = getNextActivePlayerIndex(GAME_STATE.currentPlayerIndex);
@@ -494,7 +496,7 @@ function updatePanel(tile) {
       const canMove  = worker.getMovement > 0;
       panel.innerHTML += `
         <div class="info-row">
-          <span class="info-label">Worker (${worker.getMovement}/${worker.getMaxMovement} moves)</span>
+          <span class="info-label">Worker (${worker.getMovement}/${worker.getMaxMovement} actions)</span>
           <span class="info-val">
             <button class="info-btn" ${canMove ? `onclick="startMove('worker')"` : 'disabled'}>
               ${isMoving ? 'Moving…' : 'Move'}
@@ -506,12 +508,20 @@ function updatePanel(tile) {
     if (soldier) {
       const isMoving = selectedUnit === soldier;
       const canMove  = soldier.getMovement > 0;
+      const enemyAdjacent = getTileNeighbours(tile.col, tile.row).some(n => {
+        const neighbourTile = tiles.find(t => t.col === n.col && t.row === n.row);
+        return neighbourTile && neighbourTile.units.some(u => u.getOwner && u.getOwner !== soldier.getOwner);
+      });
+      const canAttack = canMove && enemyAdjacent;
       panel.innerHTML += `
         <div class="info-row">
-          <span class="info-label">Soldier (${soldier.getMovement}/${soldier.getMaxMovement} moves)</span>
+          <span class="info-label">Soldier (${soldier.getMovement}/${soldier.getMaxMovement} actions)</span>
           <span class="info-val">
             <button class="info-btn" ${canMove ? `onclick="startMove('soldier')"` : 'disabled'}>
               ${isMoving ? 'Moving…' : 'Move'}
+            </button>
+            <button class="info-btn" ${canAttack ? 'onclick="startAttack()"' : 'disabled'}>
+              Attack
             </button>
           </span>
         </div>`;
@@ -542,14 +552,14 @@ function updatePanel(tile) {
         <span class="info-label">train troops</span>
         <span class="info-val">
           <button class="info-btn" id="train-troops-btn" ${soldierExists || !canAffordSoldier ? 'disabled' : 'onclick="addTroops()"'}>Train</button>
-          <span class="info-val">+10g</span>
+          <span class="info-val">-10g</span>
         </span>
       </div>
       <div class="info-row">
         <span class="info-label">create workers</span>
         <span class="info-val">
           <button class="info-btn" id="create-workers-btn" ${workerExists || !canAffordWorker ? 'disabled' : 'onclick="createWorkers()"'}>Create</button>
-          <span class="info-val">+5g</span>
+          <span class="info-val">-5g</span>
         </span>
       </div>
     `;
@@ -566,6 +576,7 @@ function startMove(unitType) {
   const unit = selectedTile.units.find(u => u.getType === unitType && u.getMovement > 0);
   if (!unit) return;
   selectedUnit = unit;
+  selectedAction = 'move';
   selectedUnit.setPos = { x: selectedTile.col, y: selectedTile.row };
 
   // Only immediately adjacent tiles are valid move targets.
@@ -579,8 +590,27 @@ function startMove(unitType) {
   draw();
 }
 
+function startAttack() {
+  if (!selectedTile) return;
+  const unit = selectedTile.units.find(u => u.getType === 'soldier' && u.getMovement > 0);
+  if (!unit) return;
+  selectedUnit = unit;
+  selectedAction = 'attack';
+  selectedUnit.setPos = { x: selectedTile.col, y: selectedTile.row };
+
+  reachableTiles = getAdjacentReachableTiles(selectedTile.col, selectedTile.row);
+  reachableTiles = new Set([...reachableTiles].filter(key => {
+    const [col, row] = key.split(',').map(Number);
+    const tile = tiles.find(t => t.col === col && t.row === row);
+    return tile && tile.units.some(u => u.getOwner && u.getOwner !== selectedUnit.getOwner);
+  }));
+  updatePanel(selectedTile);
+  draw();
+}
+
 function cancelMove() {
   selectedUnit = null;
+  selectedAction = null;
   reachableTiles = new Set();
   updatePanel(selectedTile);
   draw();
@@ -628,6 +658,35 @@ function executeMove(toCol, toRow) {
   draw();
 }
 
+function executeAttack(toCol, toRow) {
+  if (!selectedUnit) {
+    cancelMove();
+    return;
+  }
+
+  const fromCol = selectedUnit.getPos.x;
+  const fromRow = selectedUnit.getPos.y;
+  if (!isAdjacentTile(fromCol, fromRow, toCol, toRow)) {
+    cancelMove();
+    return;
+  }
+
+  const targetTile = tiles.find(t => t.col === toCol && t.row === toRow);
+  if (!targetTile || !targetTile.units.some(u => u.getOwner && u.getOwner !== selectedUnit.getOwner)) {
+    cancelMove();
+    return;
+  }
+
+  selectedUnit.setMovement = Math.max(0, selectedUnit.getMovement - 1);
+  selectedUnit = null;
+  selectedAction = null;
+  reachableTiles = new Set();
+  selectedTile = targetTile;
+
+  updatePanel(selectedTile);
+  draw();
+}
+
 //  INPUT
 canvas.addEventListener('mousedown', e => {
   cam.dragging   = true;
@@ -660,7 +719,11 @@ canvas.addEventListener('mouseup', e => {
     if (tile) {
       const key = `${col},${row}`;
       if (selectedUnit && reachableTiles.has(key)) {
-        executeMove(col, row);
+        if (selectedAction === 'attack') {
+          executeAttack(col, row);
+        } else {
+          executeMove(col, row);
+        }
       } else {
         cancelMove();
         selectedTile = (selectedTile && selectedTile.col === col && selectedTile.row === row) ? null : tile;
