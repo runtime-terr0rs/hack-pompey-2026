@@ -76,10 +76,10 @@ const GAME_STATE = {
   turn: 1,
   currentPlayerIndex: 0,
   players: [
-    {id: 1, playerName: 'Player 1', data: (() => { let p = new Player(); p.setUnitColour = '#0010f7'; return p; })()},
-    {id: 2, playerName: 'Player 2', data: (() => { let p = new Player(); p.setUnitColour = '#e100ff'; return p; })()},
-    {id: 3, playerName: 'Player 3', data: (() => { let p = new Player(); p.setUnitColour = '#00ac0e'; return p; })()},
-    {id: 4, playerName: 'Player 4', data: (() => { let p = new Player(); p.setUnitColour = '#ffee00'; return p; })()},
+    {id: 1, playerName: 'The Spinnaker Scalers', data: (() => { let p = new Player(); p.setUnitColour = '#0010f7'; return p; })()},
+    {id: 2, playerName: "So'ton & Slimes", data: (() => { let p = new Player(); p.setUnitColour = '#e100ff'; return p; })()},
+    {id: 3, playerName: 'M27 ghouls', data: (() => { let p = new Player(); p.setUnitColour = '#00ac0e'; return p; })()},
+    // {id: 4, playerName: 'The Hovercraft Heretics', data: (() => { let p = new Player(); p.setUnitColour = '#ffee00'; return p; })()},
   ]
 };
 
@@ -92,7 +92,7 @@ function seededRand(seed) {
   };
 }
 
-function generateMap(seed = 42, numPlayers = 4) {
+function generateMap(seed = 42, numPlayers = 3) {
   const rand = seededRand(seed);
   const tiles = [];
   const citySet = new Set();
@@ -316,7 +316,7 @@ function resize() {
   draw();
 }
 
-function drawHex(ctx, cx, cy, size, fillColor, strokeColor, strokeWidth = 1) {
+function drawHex(ctx, cx, cy, size, fillColor, strokeColor, strokeWidth = 1, tile = null) {
   const pts = hexCorners(cx, cy, size - 1);
   ctx.beginPath();
   ctx.moveTo(pts[0].x, pts[0].y);
@@ -327,6 +327,20 @@ function drawHex(ctx, cx, cy, size, fillColor, strokeColor, strokeWidth = 1) {
   ctx.strokeStyle = strokeColor;
   ctx.lineWidth = strokeWidth;
   ctx.stroke();
+  
+  if (tile && tile.owner) {
+    const ownerPlayer = GAME_STATE.players.find(p => p.playerName === tile.owner);
+    if (ownerPlayer) {
+      const pts = hexCorners(cx, cy, size - 3);
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < 6; i++) ctx.lineTo(pts[i].x, pts[i].y);
+      ctx.closePath();
+      ctx.strokeStyle = ownerPlayer.data.getUnitColour;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+  }
 }
 
 function drawUnits(ctx, tile, x, y) {
@@ -411,7 +425,7 @@ function draw() {
 
     const sw = (isReachable || isUnitOrigin) ? 2 : isSelected ? 2.5 : 1;
 
-    drawHex(ctx, x, y, size, fill, stroke, sw);
+    drawHex(ctx, x, y, size, fill, stroke, sw, tile);
 
     if (tile.units.length > 0) drawUnits(ctx, tile, x, y);
 
