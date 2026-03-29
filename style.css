@@ -45,7 +45,7 @@ header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 24px;
+    padding: 20px 20px;
     border-bottom: 1px solid var(--border);
     background: var(--panel-bg);
     flex-shrink: 0;
@@ -82,7 +82,7 @@ canvas.dragging { cursor: grabbing; }
 
 /* ── SIDE PANEL ── */
 #panel {
-    width: 260px;
+    width: 400px;
     flex-shrink: 0;
     background: var(--panel-bg);
     border-left: 1px solid var(--border);
@@ -172,6 +172,16 @@ canvas.dragging { cursor: grabbing; }
     box-shadow: 0 2px 6px rgba(201, 168, 76, 0.2);
 }
 
+.info-btn:disabled,
+.info-btn[disabled] {
+    background: #4a4a4a;
+    color: #7a7a7a;
+    cursor: not-allowed;
+    opacity: 0.75;
+    box-shadow: none;
+    transform: none;
+}
+
 .coord-display {
     font-family: 'Cinzel', serif;
     font-size: 1.4rem;
@@ -257,3 +267,151 @@ canvas.dragging { cursor: grabbing; }
     transform: translateY(0);
     box-shadow: 0 2px 6px rgba(201, 168, 76, 0.2);
 }
+/* ── TURN PANEL ── */
+#turn-panel {
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+#turn-panel .panel-header {
+    border-bottom: 1px solid var(--border);
+}
+
+/* ── COLLAPSIBLE HEADER ── */
+.collapsible-header {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.collapse-arrow {
+    font-size: 0.7rem;
+    color: var(--gold-dim);
+    transition: transform 0.2s ease;
+}
+
+.collapse-arrow.collapsed {
+    transform: rotate(180deg);
+}
+
+/* ── STATS BODY ── */
+#stats-body {
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+    max-height: 200px;
+    border-top: 1px solid var(--border);
+}
+
+#stats-body.collapsed {
+    max-height: 0;
+    border-top: none;
+}
+
+.player-stat-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 18px;
+    border-bottom: 1px solid #1e2e3a;
+    font-size: 0.9rem;
+}
+.player-stat-units {
+    color: var(--silver);
+    font-size: 0.82rem;
+    margin-left: 8px;
+}
+
+.player-stat-row:last-child {
+    border-bottom: none;
+}
+
+.player-colour-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.player-stat-name {
+    color: var(--text-dim);
+    flex: 1;
+}
+
+.player-stat-gold {
+    color: var(--gold);
+    font-weight: 600;
+}
+
+.player-stat-defeated {
+    color: var(--red);
+    font-size: 0.75rem;
+    font-style: italic;
+}
+/* ── COMBAT LOG ── */
+#combat-display {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    overflow: hidden;
+    background-color: var(--panel-bg);
+}
+
+.combat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.combat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 6px 0;
+    border-bottom: 1px solid #1e2e3a;
+    font-size: 1.5rem;
+}
+
+.combat-row:last-child { border-bottom: none; }
+
+.combat-label {
+    color: var(--text-dim);
+    font-size: 1.4rem;
+}
+
+.combat-val {
+    color: var(--highlight);
+    font-weight: 600;
+}
+
+.combat-row.outcome {
+    margin-top: 4px;
+    border-bottom: none;
+}
+
+.combat-val.success {
+    color: #5aad7a;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.05em;
+}
+
+.combat-val.failure {
+    color: var(--red);
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.05em;
+}
+
+/* ── UNIT BADGES ── */
+.unit-badge {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 2px;
+    border: 1px solid;
+}
+
+.badge-worker  { color: #f0c674; border-color: #a07830; background: #1e1a0a; }
+.badge-soldier { color: #c94e50; border-color: #8a2a2a; background: #1e0a0a; }
